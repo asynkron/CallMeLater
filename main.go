@@ -23,11 +23,58 @@ type requestData struct {
 }
 
 type responseData struct {
-	Header map[string][]string
-	Body   []byte
+	Header      map[string][]string
+	Body        []byte
+	ResponseUrl string
+	Method      string
 }
 
-func makeRequest(p *requestData) (*responseData, error) {
+func consumeLoop(expired chan *requestData) {
+	log.Print("Consume loop started")
+	for {
+		msg := <-expired
+		go func() {
+			sendRequestResponse(msg)
+		}()
+	}
+}
+
+func sendRequestResponse(msg *requestData) {
+	response, err := sendRequest(msg)
+	if err != nil {
+		log.Printf("Error making request: %s", err)
+		return
+	}
+	err = sendResponse(response)
+	if err != nil {
+		log.Printf("Error sending response: %s", err)
+		return
+	}
+}
+
+func sendResponse(p *responseData) error {
+	var r io.Reader
+	request, err := http.NewRequest(p.Method, p.ResponseUrl, r)
+	if err != nil {
+		return err
+	}
+	request.Header = p.Header
+	request.Body = ioutil.NopCloser(bytes.NewReader(p.Body))
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+	log.Printf("Response: %s", string(body))
+	return nil
+}
+
+func sendRequest(p *requestData) (*responseData, error) {
 	var r io.Reader
 	request, err := http.NewRequest(p.Method, p.RequestUrl, r)
 	if err != nil {
@@ -48,15 +95,17 @@ func makeRequest(p *requestData) (*responseData, error) {
 	}
 
 	var res = &responseData{
-		Header: response.Header,
-		Body:   body,
+		Header:      response.Header,
+		Body:        body,
+		ResponseUrl: p.ResponseUrl,
+		Method:      "POST",
 	}
 
 	return res, nil
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	//X-Later-Request-Url 	- url to makeRequest
+	//X-Later-Request-Url 	- url to sendRequest
 	requestUrl, err := url.Parse(r.Header.Get("X-Later-Request-Url"))
 	if err != nil {
 		return
@@ -98,5 +147,9 @@ func handleRequests() {
 }
 
 func main() {
+	c := make(chan *requestData)
+	go func() {
+		consumeLoop(c)
+	}()
 	handleRequests()
 }
