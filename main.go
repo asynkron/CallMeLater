@@ -29,18 +29,18 @@ type responseData struct {
 	Method      string
 }
 
-func consumeLoop(expired chan *requestData) {
+var requests = make(chan *requestData)
+
+func consumeLoop() {
 	log.Print("Consume loop started")
 	for {
-		msg := <-expired
-		go func() {
-			sendRequestResponse(msg)
-		}()
+		rd := <-requests
+		go sendRequestResponse(rd)
 	}
 }
 
-func sendRequestResponse(msg *requestData) {
-	response, err := sendRequest(msg)
+func sendRequestResponse(rd *requestData) {
+	response, err := sendRequest(rd)
 	if err != nil {
 		log.Printf("Error making request: %s", err)
 		return
@@ -52,14 +52,15 @@ func sendRequestResponse(msg *requestData) {
 	}
 }
 
-func sendResponse(p *responseData) error {
+func sendResponse(rd *responseData) error {
+	log.Printf("Sending response to %s", rd.ResponseUrl)
 	var r io.Reader
-	request, err := http.NewRequest(p.Method, p.ResponseUrl, r)
+	request, err := http.NewRequest(rd.Method, rd.ResponseUrl, r)
 	if err != nil {
 		return err
 	}
-	request.Header = p.Header
-	request.Body = ioutil.NopCloser(bytes.NewReader(p.Body))
+	request.Header = rd.Header
+	request.Body = ioutil.NopCloser(bytes.NewReader(rd.Body))
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
@@ -75,6 +76,7 @@ func sendResponse(p *responseData) error {
 }
 
 func sendRequest(p *requestData) (*responseData, error) {
+	log.Printf("Sending request: %s", p.RequestUrl)
 	var r io.Reader
 	request, err := http.NewRequest(p.Method, p.RequestUrl, r)
 	if err != nil {
@@ -134,10 +136,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		Method:      r.Method,
 	}
 
-	j, err := json2.Marshal(p)
+	saveRequest(p)
 
-	fmt.Fprintf(w, "json "+string(j))
 	fmt.Println("Endpoint Hit: handler")
+}
+
+func saveRequest(rd *requestData) {
+	j, err := json2.Marshal(rd)
+	if err != nil {
+		return
+	}
+	json := string(j)
+
+	log.Printf("Request: %s", json)
+	requests <- rd
 }
 
 func handleRequests() {
@@ -147,9 +159,6 @@ func handleRequests() {
 }
 
 func main() {
-	c := make(chan *requestData)
-	go func() {
-		consumeLoop(c)
-	}()
+	go consumeLoop()
 	handleRequests()
 }
