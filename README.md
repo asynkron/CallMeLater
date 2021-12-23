@@ -1,6 +1,6 @@
 # Call Me Later
 
-Send delayed/scheduled HTTP requests
+Schedule HTTP requests later in time.
 
 Service URL `/later`
 
