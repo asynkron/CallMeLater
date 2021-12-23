@@ -14,8 +14,8 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 
 func handleRequests() {
 	rtr := mux.NewRouter()
-	rtr.HandleFunc("/number/{id:[0-9]+}", homePage)
-	http.HandleFunc("/later/{path:[0-9]+}", homePage)
+	rtr.HandleFunc(`/later/{rest:.+/}`, homePage)
+	http.Handle("/", rtr)
 	err := http.ListenAndServe(":10000", nil)
 	log.Fatal(err)
 }
