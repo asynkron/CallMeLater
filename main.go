@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	json2 "encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -10,7 +12,8 @@ import (
 	"time"
 )
 
-type payload struct {
+type requestData struct {
+	Method      string
 	Header      map[string][]string
 	Form        map[string][]string
 	RequestUrl  string
@@ -19,8 +22,41 @@ type payload struct {
 	Body        []byte
 }
 
+type responseData struct {
+	Header map[string][]string
+	Body   []byte
+}
+
+func makeRequest(p *requestData) (*responseData, error) {
+	var r io.Reader
+	request, err := http.NewRequest(p.Method, p.RequestUrl, r)
+	if err != nil {
+		return nil, err
+	}
+	request.Header = p.Header
+	request.Form = p.Form
+	request.Body = ioutil.NopCloser(bytes.NewReader(p.Body))
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var res = &responseData{
+		Header: response.Header,
+		Body:   body,
+	}
+
+	return res, nil
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
-	//X-Later-Request-Url 	- url to call
+	//X-Later-Request-Url 	- url to makeRequest
 	requestUrl, err := url.Parse(r.Header.Get("X-Later-Request-Url"))
 	if err != nil {
 		return
@@ -39,13 +75,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 
-	var p = &payload{
+	var p = &requestData{
 		RequestUrl:  requestUrl.String(),
 		ResponseUrl: responseUrl.String(),
 		When:        time,
 		Header:      r.Header,
 		Form:        r.Form,
 		Body:        body,
+		Method:      r.Method,
 	}
 
 	j, err := json2.Marshal(p)
