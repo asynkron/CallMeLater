@@ -63,7 +63,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	//X-Later-When 			- UTC timestamp
 	layout := "2006-01-02 15:04:05 -0700 MST"
-	time, err := time.Parse(layout, r.Header.Get("X-Later-When"))
+	when, err := time.Parse(layout, r.Header.Get("X-Later-When"))
 	if err != nil {
 		return
 	}
@@ -78,7 +78,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	var p = &requestData{
 		RequestUrl:  requestUrl.String(),
 		ResponseUrl: responseUrl.String(),
-		When:        time,
+		When:        when,
 		Header:      r.Header,
 		Form:        r.Form,
 		Body:        body,
