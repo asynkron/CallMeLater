@@ -3,6 +3,7 @@ package main
 import (
 	json2 "encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -15,6 +16,7 @@ type payload struct {
 	RequestUrl  string
 	ResponseUrl string
 	When        time.Time
+	Body        []byte
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -35,12 +37,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	body, err := ioutil.ReadAll(r.Body)
+
 	var p = &payload{
 		RequestUrl:  requestUrl.String(),
 		ResponseUrl: responseUrl.String(),
 		When:        time,
 		Header:      r.Header,
 		Form:        r.Form,
+		Body:        body,
 	}
 
 	j, err := json2.Marshal(p)
