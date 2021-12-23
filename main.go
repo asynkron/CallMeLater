@@ -1,6 +1,7 @@
 package main
 
 import (
+	json2 "encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,7 +9,15 @@ import (
 	"time"
 )
 
-func homePage(w http.ResponseWriter, r *http.Request) {
+type payload struct {
+	Header      map[string][]string
+	Form        map[string][]string
+	RequestUrl  string
+	ResponseUrl string
+	When        time.Time
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
 	//X-Later-Request-Url 	- url to call
 	requestUrl, err := url.Parse(r.Header.Get("X-Later-Request-Url"))
 	if err != nil {
@@ -26,12 +35,22 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Welcome to the HomePage!")
-	fmt.Println("Endpoint Hit: homePage")
+	var p = &payload{
+		RequestUrl:  requestUrl.String(),
+		ResponseUrl: responseUrl.String(),
+		When:        time,
+		Header:      r.Header,
+		Form:        r.Form,
+	}
+
+	j, err := json2.Marshal(p)
+
+	fmt.Fprintf(w, "json "+string(j))
+	fmt.Println("Endpoint Hit: handler")
 }
 
 func handleRequests() {
-	http.HandleFunc("/later", homePage)
+	http.HandleFunc("/later", handler)
 	err := http.ListenAndServe(":10000", nil)
 	log.Fatal(err)
 }
