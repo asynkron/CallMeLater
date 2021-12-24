@@ -58,7 +58,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	var p = &requestData{
 		RequestId:      uuid.New().String(),
 		RequestUrl:     requestUrl.String(),
-		RequestMethod:  r.Header.Get("X-Later-Request-RequestMethod"),
+		RequestMethod:  r.Method,
 		ResponseUrl:    responseUrlStr,
 		ResponseMethod: r.Header.Get("X-Later-Response-RequestMethod"),
 		When:           t,
