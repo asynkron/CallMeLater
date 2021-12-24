@@ -10,21 +10,22 @@ import (
 )
 
 type requestData struct {
-	RequestId   string              `json:"request_id,omitempty"`
-	Method      string              `json:"method,omitempty"`
-	Header      map[string][]string `json:"header,omitempty"`
-	Form        map[string][]string `json:"form,omitempty"`
-	RequestUrl  string              `json:"request_url,omitempty"`
-	ResponseUrl string              `json:"response_url,omitempty"`
-	When        time.Time           `json:"when"`
-	Body        []byte              `json:"body,omitempty"`
+	RequestId      string              `json:"request_id,omitempty"`
+	RequestMethod  string              `json:"request_method,omitempty"`
+	Header         map[string][]string `json:"header,omitempty"`
+	Form           map[string][]string `json:"form,omitempty"`
+	RequestUrl     string              `json:"request_url,omitempty"`
+	ResponseUrl    string              `json:"response_url,omitempty"`
+	ResponseMethod string              `json:"response_method,omitempty"`
+	When           time.Time           `json:"when"`
+	Body           []byte              `json:"body,omitempty"`
 }
 
 type responseData struct {
-	Header      map[string][]string `json:"header,omitempty"`
-	Body        []byte              `json:"body,omitempty"`
-	ResponseUrl string              `json:"response_url,omitempty"`
-	Method      string              `json:"method,omitempty"`
+	Header         map[string][]string `json:"header,omitempty"`
+	Body           []byte              `json:"body,omitempty"`
+	ResponseUrl    string              `json:"response_url,omitempty"`
+	ResponseMethod string              `json:"response_method,omitempty"`
 }
 
 func sendRequestResponse(rd *requestData) {
@@ -64,7 +65,7 @@ func sendResponse(rd *responseData) error {
 		Msg("Sending response")
 
 	var r io.Reader
-	request, err := http.NewRequest(rd.Method, rd.ResponseUrl, r)
+	request, err := http.NewRequest(rd.ResponseMethod, rd.ResponseUrl, r)
 	if err != nil {
 		return err
 	}
@@ -99,7 +100,7 @@ func sendRequest(p *requestData) (*responseData, error) {
 		Msg("Sending request")
 
 	var r io.Reader
-	request, err := http.NewRequest(p.Method, p.RequestUrl, r)
+	request, err := http.NewRequest(p.RequestMethod, p.RequestUrl, r)
 	if err != nil {
 		return nil, err
 	}
@@ -118,10 +119,10 @@ func sendRequest(p *requestData) (*responseData, error) {
 	}
 
 	var res = &responseData{
-		Header:      response.Header,
-		Body:        body,
-		ResponseUrl: p.ResponseUrl,
-		Method:      "POST",
+		Header:         response.Header,
+		Body:           body,
+		ResponseUrl:    p.ResponseUrl,
+		ResponseMethod: p.ResponseMethod,
 	}
 
 	return res, nil

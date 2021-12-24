@@ -56,14 +56,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	t := time.Now().Add(when)
 
 	var p = &requestData{
-		RequestId:   uuid.New().String(),
-		RequestUrl:  requestUrl.String(),
-		ResponseUrl: responseUrlStr,
-		When:        t,
-		Header:      r.Header,
-		Form:        r.Form,
-		Body:        body,
-		Method:      r.Method,
+		RequestId:      uuid.New().String(),
+		RequestUrl:     requestUrl.String(),
+		RequestMethod:  r.Header.Get("X-Later-Request-RequestMethod"),
+		ResponseUrl:    responseUrlStr,
+		ResponseMethod: r.Header.Get("X-Later-Response-RequestMethod"),
+		When:           t,
+		Header:         r.Header,
+		Form:           r.Form,
+		Body:           body,
 	}
 
 	saveRequest(p)
