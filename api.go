@@ -29,6 +29,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if when.Before(time.Now()) {
+		log.
+			Warn().
+			Msg("Requested time is in the past")
+	}
+
 	body, err := ioutil.ReadAll(r.Body)
 
 	var p = &requestData{
