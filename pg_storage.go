@@ -20,6 +20,11 @@ type PgRow struct {
 }
 
 func newPgStorage(connectionString string) *PgStorage {
+	log.
+		Info().
+		Str("connectionString", connectionString).
+		Msg("Connecting to PostgreSQL")
+
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		log.
@@ -28,6 +33,11 @@ func newPgStorage(connectionString string) *PgStorage {
 
 		panic(err)
 	}
+	log.
+		Info().
+		Str("connectionString", connectionString).
+		Msg("Connected to PostgreSQL")
+
 	return &PgStorage{db: db}
 }
 
@@ -68,7 +78,7 @@ func (a *requestData) Value() (driver.Value, error) {
 
 func (p *PgStorage) Set(data *requestData) error {
 	var _, err = p.db.Exec(
-		"INSERT INTO requests (RequestId, Timestamp, Data) VALUES ($1, $2, $3)",
+		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
 		data.RequestId,
 		data.When,
 		data,

@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	storage  RequestStorage = newPgStorage("postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable")
-	requests                = make(chan *requestData)
+	storage  RequestStorage
+	requests = make(chan *requestData)
 )
 
 func consumeLoop() {
@@ -27,6 +27,7 @@ func main() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
+	storage = newPgStorage("postgres://postgres:postgres@localhost:5432/callme?sslmode=disable")
 	go consumeLoop()
 	handleRequests()
 }
