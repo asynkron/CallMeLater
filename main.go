@@ -25,6 +25,7 @@ type NoopStorage struct{}
 func (n NoopStorage) Get(id string) (*requestData, error) {
 	log.
 		Info().
+		Str("id", id).
 		Msg("NoopStorage.Get")
 	return nil, nil
 }
@@ -32,27 +33,28 @@ func (n NoopStorage) Get(id string) (*requestData, error) {
 func (n NoopStorage) Set(id string, data *requestData) error {
 	log.
 		Info().
+		Str("id", id).
 		Msg("NoopStorage.Set")
 
 	return nil
 }
 
 type requestData struct {
-	RequestId   string
-	Method      string
-	Header      map[string][]string
-	Form        map[string][]string
-	RequestUrl  string
-	ResponseUrl string
-	When        time.Time
-	Body        []byte
+	RequestId   string              `json:"request_id,omitempty"`
+	Method      string              `json:"method,omitempty"`
+	Header      map[string][]string `json:"header,omitempty"`
+	Form        map[string][]string `json:"form,omitempty"`
+	RequestUrl  string              `json:"request_url,omitempty"`
+	ResponseUrl string              `json:"response_url,omitempty"`
+	When        time.Time           `json:"when"`
+	Body        []byte              `json:"body,omitempty"`
 }
 
 type responseData struct {
-	Header      map[string][]string
-	Body        []byte
-	ResponseUrl string
-	Method      string
+	Header      map[string][]string `json:"header,omitempty"`
+	Body        []byte              `json:"body,omitempty"`
+	ResponseUrl string              `json:"response_url,omitempty"`
+	Method      string              `json:"method,omitempty"`
 }
 
 var (
