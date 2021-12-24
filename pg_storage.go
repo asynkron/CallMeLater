@@ -90,3 +90,15 @@ func (p *PgStorage) Set(data *requestData) error {
 		Msg("Inserted new request")
 	return err
 }
+
+func (p *PgStorage) Delete(requestId string) error {
+	var _, err = p.db.Exec(
+		`DELETE FROM "Requests" WHERE "RequestId" = $1`,
+		requestId,
+	)
+
+	log.Info().
+		Str("requestId", requestId).
+		Msg("Deleted request")
+	return err
+}

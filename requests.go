@@ -35,6 +35,7 @@ func sendRequestResponse(rd *requestData) {
 			Msg("Error sending request")
 		return
 	}
+
 	if rd.ResponseUrl != "" {
 		err = sendResponse(response)
 		if err != nil {
@@ -46,6 +47,13 @@ func sendRequestResponse(rd *requestData) {
 		}
 	} else {
 		log.Info().Msg("No response url")
+	}
+
+	err = storage.Delete(rd.RequestId)
+	if err != nil {
+		log.
+			Err(err).
+			Msg("Error deleting request")
 	}
 }
 
