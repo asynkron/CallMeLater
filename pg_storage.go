@@ -57,11 +57,12 @@ func (p *PgStorage) Get() ([]*requestData, error) {
 	return r, nil
 }
 
-func (p *PgStorage) Set(id string, data *requestData) error {
-	_, err := p.db.Exec("INSERT INTO requests (id, data) VALUES ($1, $2)", id, data)
+func (p *PgStorage) Set(data *requestData) error {
+	_, err := p.db.Exec("INSERT INTO requests (id, when, data) VALUES ($1, $2, $3)", data.RequestId, data.When, data)
 
 	log.Info().
-		Str("id", id).
+		Str("id", data.RequestId).
+		Str("Url", data.RequestUrl).
 		Msg("Inserted new request")
 	return err
 }
