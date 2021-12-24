@@ -4,8 +4,11 @@ Schedule HTTP requests later in time. Also known as Delayed requests or Delayed 
 
 ## Usage
 
-Make a http request just like you would normally do to call some service. Replace the URL with the URL of this service
-and pass the following extra headers:
+Call-me-later is "almost" a proxy. or rather a delayed proxy. Call your services "in the future".
+
+Everything stays the same, with some minor tweaks. Call-me-later will always respond with a 202 accepted for any
+properly formed request, you will not get a direct response back. Call-me-later needs a few header values in order to
+know what to do with the request.
 
 * `X-Later-Request-URL` the URL to call
 * `X-Later-Request-When` when to call it, e.g. `1h` to schedule the call 1 hour from now. or `10m5s` for 10 minutes and
@@ -13,11 +16,12 @@ and pass the following extra headers:
 * `X-Later-Response-URL` optional response callback URL to send any response data to
 * `X-Later-Response-Method` optional response callback method to use for the response callback
 
-Any headers or content will be forwarded as is to the target Request URL once the scheduled time is reached. The HTTP
-method of the call to the Later service will be captured and used for the request to the target URL.
+Any headers and content will be forwarded as is to the target Request URL once the scheduled time is reached. The HTTP
+method of the call to the Call-me-later service will be captured and used for the request to the target URL.
 
-Any response from the called service can be sent to a callback URL using the `X-Later-Response-URL`
-and `X-Later-Response-Method`.
+Any response from the called service can optionally be sent to a callback URL using the `X-Later-Response-URL`
+and `X-Later-Response-Method`. The same pattern applies there, any headers and content will be forwarded as is to the
+target URL.
 
 ## Persistence
 
