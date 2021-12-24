@@ -15,33 +15,43 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	//X-Later-Request-Url 	- url to sendRequest
 	requestUrl, err := url.Parse(r.Header.Get("X-Later-Request-Url"))
 	if err != nil {
+		log.
+			Err(err).
+			Msg("failed to parse request url")
+
 		return
 	}
 	//X-Later-When 			- UTC timestamp
-	layout := "2006-01-02 15:04:05 -0700 MST"
-	when, err := time.Parse(layout, r.Header.Get("X-Later-When"))
+	when, err := time.ParseDuration(r.Header.Get("X-Later-When"))
 	if err != nil {
+		log.
+			Err(err).
+			Msg("failed to parse when")
+
 		return
 	}
 	//X-Later-Response-Url 	- webhook to send results to
-	responseUrl, err := url.Parse(r.Header.Get("X-Later-Response-Url"))
-	if err != nil {
-		return
-	}
-
-	if when.Before(time.Now()) {
-		log.
-			Warn().
-			Msg("Requested time is in the past")
+	tmp := r.Header.Get("X-Later-Response-Url")
+	var responseUrl *url.URL
+	if tmp != "" {
+		responseUrl, err = url.Parse(tmp)
+		if err != nil {
+			log.
+				Err(err).
+				Msg("failed to parse response url")
+			return
+		}
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
+
+	t := time.Now().Add(when)
 
 	var p = &requestData{
 		RequestId:   uuid.New().String(),
 		RequestUrl:  requestUrl.String(),
 		ResponseUrl: responseUrl.String(),
-		When:        when,
+		When:        t,
 		Header:      r.Header,
 		Form:        r.Form,
 		Body:        body,
