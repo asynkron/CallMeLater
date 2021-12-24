@@ -3,10 +3,17 @@ package main
 import (
 	"database/sql"
 	"github.com/rs/zerolog/log"
+	"time"
 )
 
 type PgStorage struct {
 	db *sql.DB
+}
+
+type PgRow struct {
+	id   int
+	when time.Time
+	data *requestData
 }
 
 func NewPgStorage(connectionString string) *PgStorage {
@@ -22,8 +29,32 @@ func NewPgStorage(connectionString string) *PgStorage {
 }
 
 func (p *PgStorage) Get() ([]*requestData, error) {
-	//TODO implement me
-	panic("implement me")
+	//gets the top 1000 requests
+	rows, err := p.db.Query("SELECT * FROM requests ORDER BY id DESC LIMIT 1000")
+	if err != nil {
+		log.
+			Err(err).
+			Msg("Failed to get requests")
+
+		return nil, err
+	}
+
+	var r []*requestData
+	//loop over rows and add to slice
+	for rows.Next() {
+		pgRow := &PgRow{}
+		err := rows.Scan(&pgRow.id, &pgRow.when, &pgRow.data)
+		if err != nil {
+			log.
+				Err(err).
+				Msg("Failed to scan row")
+
+			return nil, err
+		}
+		r = append(r, pgRow.data)
+	}
+
+	return r, nil
 }
 
 func (p *PgStorage) Set(id string, data *requestData) error {
