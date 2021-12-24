@@ -91,6 +91,7 @@ func saveRequest(rd *requestData) {
 	log.
 		Info().
 		Str("Json", json).Msg("Saved Request")
+
 	requests <- rd
 }
 
