@@ -23,12 +23,15 @@ type RequestStorage interface {
 type NoopStorage struct{}
 
 func (n NoopStorage) Get(id string) (*requestData, error) {
-	log.Info().Msg("NoopStorage.Get")
+	log.Info().
+		Msg("NoopStorage.Get")
 	return nil, nil
 }
 
 func (n NoopStorage) Set(id string, data *requestData) error {
-	log.Info().Msg("NoopStorage.Set")
+	log.Info().
+		Msg("NoopStorage.Set")
+
 	return nil
 }
 
@@ -56,7 +59,10 @@ var (
 )
 
 func consumeLoop() {
-	log.Print("Consume loop started")
+	log.
+		Info().
+		Msg("Consume loop started")
+
 	for {
 		rd := <-requests
 		go sendRequestResponse(rd)
@@ -66,18 +72,24 @@ func consumeLoop() {
 func sendRequestResponse(rd *requestData) {
 	response, err := sendRequest(rd)
 	if err != nil {
-		log.Err(err).Msg("Error sending request")
+		log.Err(err).
+			Msg("Error sending request")
 		return
 	}
 	err = sendResponse(response)
 	if err != nil {
-		log.Err(err).Msg("Error sending response")
+		log.Err(err).
+			Msg("Error sending response")
+
 		return
 	}
 }
 
 func sendResponse(rd *responseData) error {
-	log.Info().Str("Url", rd.ResponseUrl).Msg("Sending response")
+	log.Info().
+		Str("Url", rd.ResponseUrl).
+		Msg("Sending response")
+
 	var r io.Reader
 	request, err := http.NewRequest(rd.Method, rd.ResponseUrl, r)
 	if err != nil {
@@ -95,12 +107,18 @@ func sendResponse(rd *responseData) error {
 	if err != nil {
 		return err
 	}
-	log.Info().Str("Body", string(body)).Str("Url", rd.ResponseUrl).Msg("Response sent")
+	log.Info().
+		Str("Body", string(body)).Str("Url", rd.ResponseUrl).
+		Msg("Response sent")
+
 	return nil
 }
 
 func sendRequest(p *requestData) (*responseData, error) {
-	log.Printf("Sending request: %s", p.RequestUrl)
+	log.Info().
+		Str("Url", p.RequestUrl).
+		Msg("Sending request")
+
 	var r io.Reader
 	request, err := http.NewRequest(p.Method, p.RequestUrl, r)
 	if err != nil {
@@ -165,7 +183,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 	fmt.Fprint(w, "OK")
-	log.Info().Msg("Request accepted")
+	log.Info().
+		Msg("Request accepted")
 }
 
 func saveRequest(rd *requestData) {
@@ -177,17 +196,20 @@ func saveRequest(rd *requestData) {
 
 	err = storage.Set(rd.RequestId, rd)
 	if err != nil {
-		log.Err(err).Msg("Error saving request")
+		log.Err(err).
+			Msg("Error saving request")
 		return
 	}
-	log.Info().Str("Json", json).Msg("Saved Request")
+	log.Info().
+		Str("Json", json).Msg("Saved Request")
 	requests <- rd
 }
 
 func handleRequests() {
 	http.HandleFunc("/later", handler)
 	err := http.ListenAndServe(":10000", nil)
-	log.Err(err).Msg("Error listening")
+	log.Err(err).
+		Msg("Error listening")
 }
 
 func main() {
