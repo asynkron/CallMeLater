@@ -2,6 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"encoding/json"
+	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 	"time"
 )
@@ -16,7 +19,7 @@ type PgRow struct {
 	data *requestData
 }
 
-func NewPgStorage(connectionString string) *PgStorage {
+func newPgStorage(connectionString string) *PgStorage {
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		log.
@@ -57,8 +60,19 @@ func (p *PgStorage) Get() ([]*requestData, error) {
 	return r, nil
 }
 
+// Make the Attrs struct implement the driver.Valuer interface. This method
+// simply returns the JSON-encoded representation of the struct.
+func (a *requestData) Value() (driver.Value, error) {
+	return json.Marshal(a)
+}
+
 func (p *PgStorage) Set(data *requestData) error {
-	_, err := p.db.Exec("INSERT INTO requests (id, when, data) VALUES ($1, $2, $3)", data.RequestId, data.When, data)
+	var _, err = p.db.Exec(
+		"INSERT INTO requests (RequestId, Timestamp, Data) VALUES ($1, $2, $3)",
+		data.RequestId,
+		data.When,
+		data,
+	)
 
 	log.Info().
 		Str("id", data.RequestId).

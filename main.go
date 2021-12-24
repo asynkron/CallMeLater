@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	storage  RequestStorage = &NoopStorage{} // NewPgStorage("postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable")
+	storage  RequestStorage = newPgStorage("postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable")
 	requests                = make(chan *requestData)
 )
 
