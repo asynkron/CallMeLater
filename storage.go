@@ -3,16 +3,15 @@ package main
 import "github.com/rs/zerolog/log"
 
 type RequestStorage interface {
-	Get(id string) (*requestData, error)
+	Get() ([]*requestData, error)
 	Set(id string, data *requestData) error
 }
 
 type NoopStorage struct{}
 
-func (n NoopStorage) Get(id string) (*requestData, error) {
+func (n NoopStorage) Get() ([]*requestData, error) {
 	log.
 		Info().
-		Str("id", id).
 		Msg("NoopStorage.Get")
 	return nil, nil
 }
