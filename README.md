@@ -13,7 +13,8 @@ and pass the following extra headers:
 * `X-Later-Response-URL` optional response callback URL to send any response data to
 * `X-Later-Response-Method` optional response callback method to use for the response callback
 
-Any headers or content will be forwarded as is to the target Request URL once the scheduled time is reached.
+Any headers or content will be forwarded as is to the target Request URL once the scheduled time is reached. The HTTP
+method of the call to the Later service will be captured and used for the request to the target URL.
 
 Any response from the called service can be sent to a callback URL using the `X-Later-Response-URL`
 and `X-Later-Response-Method`.
@@ -30,11 +31,9 @@ Pull requests are welcome. Support for more persistence providers would be welco
 Example call:
 
 ```
-curl --location --request POST 'http://localhost:10000/later' \
+curl --location --request GET 'http://localhost:10000/later' \
 --header 'X-Later-Request-Url: http://github.com' \
 --header 'X-Later-When: 10s' \
---header 'X-Later-Response-Url: http://github.com'' \
+--header 'X-Later-Response-Url: http://some-callback-url.com' \
 --header 'X-Later-Response-Method: POST' \
---header 'Content-Type: text/plain' \
---data-raw 'Hello'
 ```
