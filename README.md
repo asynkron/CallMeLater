@@ -10,7 +10,7 @@ Everything stays the same, with some minor tweaks. Call-me-later will always res
 properly formed request, you will not get a direct response back. Call-me-later needs a few header values in order to
 know what to do with the request.
 
-* `X-Later-Request-URL` the URL to call
+* `X-Later-Request-URL` the URL to call later
 * `X-Later-Request-When` when to call it, e.g. `1h` to schedule the call 1 hour from now. or `10m5s` for 10 minutes and
   5 seconds.
 * `X-Later-Response-URL` optional response callback URL to send any response data to
