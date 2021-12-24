@@ -1,4 +1,4 @@
-module github.com/asynkron/CallYouLater
+module github.com/asynkron/CallMeLater
 
 go 1.17
 

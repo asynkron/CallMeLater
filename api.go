@@ -57,7 +57,7 @@ func saveRequest(rd *requestData) {
 	}
 	json := string(j)
 
-	err = storage.Set(rd.RequestId, rd)
+	err = storage.Set(rd)
 	if err != nil {
 		log.
 			Err(err).
