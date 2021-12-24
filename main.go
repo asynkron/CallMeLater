@@ -4,6 +4,7 @@ import (
 	"bytes"
 	json2 "encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,7 +13,25 @@ import (
 	"time"
 )
 
+type RequestStorage interface {
+	Get(id string) (*requestData, error)
+	Set(id string, data *requestData) error
+}
+
+type NoopStorage struct{}
+
+func (n NoopStorage) Get(id string) (*requestData, error) {
+	log.Printf("NoopStorage.Get(%s)", id)
+	return nil, nil
+}
+
+func (n NoopStorage) Set(id string, data *requestData) error {
+	log.Printf("NoopStorage.Set(%s)", id)
+	return nil
+}
+
 type requestData struct {
+	RequestId   string
 	Method      string
 	Header      map[string][]string
 	Form        map[string][]string
@@ -29,7 +48,10 @@ type responseData struct {
 	Method      string
 }
 
-var requests = make(chan *requestData)
+var (
+	storage  RequestStorage = NoopStorage{}
+	requests                = make(chan *requestData)
+)
 
 func consumeLoop() {
 	log.Print("Consume loop started")
@@ -127,6 +149,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 
 	var p = &requestData{
+		RequestId:   uuid.New().String(),
 		RequestUrl:  requestUrl.String(),
 		ResponseUrl: responseUrl.String(),
 		When:        when,
@@ -138,7 +161,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	saveRequest(p)
 
-	fmt.Println("Endpoint Hit: handler")
+	w.WriteHeader(http.StatusAccepted)
+	fmt.Fprint(w, "OK")
+	log.Printf("Endpoint Hit: handler %v", p)
 }
 
 func saveRequest(rd *requestData) {
@@ -148,7 +173,12 @@ func saveRequest(rd *requestData) {
 	}
 	json := string(j)
 
-	log.Printf("Request: %s", json)
+	err = storage.Set(rd.RequestId, rd)
+	if err != nil {
+		log.Printf("Error saving request: %s", err)
+		return
+	}
+	log.Printf("Saved request: %s", json)
 	requests <- rd
 }
 
