@@ -16,6 +16,10 @@ func consumeLoop() {
 	for {
 		select {
 		case rd := <-requests:
+			log.
+				Info().
+				Msg("Worker received new request")
+
 			pendingRequests = append(pendingRequests, rd)
 
 			sort.Slice(pendingRequests, func(i, j int) bool {
@@ -26,9 +30,15 @@ func consumeLoop() {
 
 			pendingRequests = sendExpiredRequests(pendingRequests)
 
-			pendingRequests = pendingRequests[0:100]
+			if len(pendingRequests) > 100 {
+				pendingRequests = pendingRequests[0:100]
+			}
 
 		case <-time.After(time.Second):
+			log.
+				Info().
+				Msg("Worker received no new messages")
+
 			pendingRequests = sendExpiredRequests(pendingRequests)
 		}
 	}
