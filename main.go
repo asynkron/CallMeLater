@@ -5,11 +5,13 @@ import (
 	json2 "encoding/json"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 )
 
@@ -21,12 +23,12 @@ type RequestStorage interface {
 type NoopStorage struct{}
 
 func (n NoopStorage) Get(id string) (*requestData, error) {
-	log.Printf("NoopStorage.Get(%s)", id)
+	log.Info().Msg("NoopStorage.Get")
 	return nil, nil
 }
 
 func (n NoopStorage) Set(id string, data *requestData) error {
-	log.Printf("NoopStorage.Set(%s)", id)
+	log.Info().Msg("NoopStorage.Set")
 	return nil
 }
 
@@ -64,18 +66,18 @@ func consumeLoop() {
 func sendRequestResponse(rd *requestData) {
 	response, err := sendRequest(rd)
 	if err != nil {
-		log.Printf("Error making request: %s", err)
+		log.Err(err).Msg("Error sending request")
 		return
 	}
 	err = sendResponse(response)
 	if err != nil {
-		log.Printf("Error sending response: %s", err)
+		log.Err(err).Msg("Error sending response")
 		return
 	}
 }
 
 func sendResponse(rd *responseData) error {
-	log.Printf("Sending response to %s", rd.ResponseUrl)
+	log.Info().Str("Url", rd.ResponseUrl).Msg("Sending response")
 	var r io.Reader
 	request, err := http.NewRequest(rd.Method, rd.ResponseUrl, r)
 	if err != nil {
@@ -93,7 +95,7 @@ func sendResponse(rd *responseData) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Response: %s", string(body))
+	log.Info().Str("Body", string(body)).Str("Url", rd.ResponseUrl).Msg("Response sent")
 	return nil
 }
 
@@ -163,7 +165,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 	fmt.Fprint(w, "OK")
-	log.Printf("Endpoint Hit: handler %v", p)
+	log.Info().Msg("Request accepted")
 }
 
 func saveRequest(rd *requestData) {
@@ -175,20 +177,24 @@ func saveRequest(rd *requestData) {
 
 	err = storage.Set(rd.RequestId, rd)
 	if err != nil {
-		log.Printf("Error saving request: %s", err)
+		log.Err(err).Msg("Error saving request")
 		return
 	}
-	log.Printf("Saved request: %s", json)
+	log.Info().Str("Json", json).Msg("Saved Request")
 	requests <- rd
 }
 
 func handleRequests() {
 	http.HandleFunc("/later", handler)
 	err := http.ListenAndServe(":10000", nil)
-	log.Fatal(err)
+	log.Err(err).Msg("Error listening")
 }
 
 func main() {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
 	go consumeLoop()
 	handleRequests()
 }
