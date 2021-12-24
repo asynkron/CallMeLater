@@ -17,8 +17,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.
 			Err(err).
-			Msg("failed to parse request url")
+			Msg("Failed to parse request url")
 
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, "Failed to parse X-Later-Request-Url")
 		return
 	}
 	//X-Later-When 			- UTC timestamp
@@ -28,19 +30,25 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			Err(err).
 			Msg("failed to parse when")
 
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, "Failed to parse X-Later-When")
 		return
 	}
 	//X-Later-Response-Url 	- webhook to send results to
 	tmp := r.Header.Get("X-Later-Response-Url")
-	var responseUrl *url.URL
+	var responseUrlStr string
 	if tmp != "" {
-		responseUrl, err = url.Parse(tmp)
+		responseUrl, err := url.Parse(tmp)
 		if err != nil {
 			log.
 				Err(err).
 				Msg("failed to parse response url")
+
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprint(w, "Failed to parse X-Later-Response-Url")
 			return
 		}
+		responseUrlStr = responseUrl.String()
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -50,7 +58,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	var p = &requestData{
 		RequestId:   uuid.New().String(),
 		RequestUrl:  requestUrl.String(),
-		ResponseUrl: responseUrl.String(),
+		ResponseUrl: responseUrlStr,
 		When:        t,
 		Header:      r.Header,
 		Form:        r.Form,

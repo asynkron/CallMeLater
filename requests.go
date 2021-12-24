@@ -35,13 +35,17 @@ func sendRequestResponse(rd *requestData) {
 			Msg("Error sending request")
 		return
 	}
-	err = sendResponse(response)
-	if err != nil {
-		log.
-			Err(err).
-			Msg("Error sending response")
+	if rd.ResponseUrl != "" {
+		err = sendResponse(response)
+		if err != nil {
+			log.
+				Err(err).
+				Msg("Error sending response")
 
-		return
+			return
+		}
+	} else {
+		log.Info().Msg("No response url")
 	}
 }
 
