@@ -1,13 +1,24 @@
 # Call Me Later
 
-Schedule HTTP requests later in time.
+Schedule HTTP requests later in time. Also known as Delayed requests or Delayed sending.
 
-Service URL `/later`
+## Usage
 
-Header values:
+Make a http request just like you would normally do to call some service. Replace the URL with the URL of this service
+and pass the following extra headers:
 
 * `X-Later-Request-URL` the URL to call
-* `X-Later-Request-When` when to call it, "2006-01-02 15:04:05 -0700 MST" format
+* `X-Later-Request-When` when to call it, e.g. `1h` to schedule the call 1 hour from now. or `10m5s` for 10 minutes and
+  5 seconds.
 * `X-Later-Response-URL` optional response callback URL to send any response data to
 
-Any headers or content will be forwarded as is to the target Reqeust URL once the When criteria happens.
+Any headers or content will be forwarded as is to the target Request URL once the scheduled time is reached.
+
+## Persistence
+
+The service will persist all requests using a RequestStorage interface. The requests are then stored until they are
+eventually called once the `When` criteria is met.
+
+## Community
+
+Pull requests are welcome. Support for more persistence providers would be welcome.
