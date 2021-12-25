@@ -18,5 +18,5 @@ func main() {
 	// SQLite
 	// storage = newSqLiteStorage("file:storage.db?cache=shared&mode=memory")
 
-	_ = callmelater.New(storage)
+	_ = server.New(storage)
 }

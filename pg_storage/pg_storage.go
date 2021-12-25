@@ -15,7 +15,7 @@ type PgStorage struct {
 type PgRow struct {
 	RequestId string
 	Timestamp time.Time
-	Data      callmelater.RequestData
+	Data      server.RequestData
 }
 
 func New(connectionString string) *PgStorage {
@@ -40,7 +40,7 @@ func New(connectionString string) *PgStorage {
 	return &PgStorage{db: db}
 }
 
-func (p *PgStorage) Get() ([]*callmelater.RequestData, error) {
+func (p *PgStorage) Get() ([]*server.RequestData, error) {
 	//gets the top 1000 requests
 	rows, err := p.db.Query(`SELECT * FROM "Requests" ORDER BY "Timestamp" DESC LIMIT 100`)
 	if err != nil {
@@ -51,7 +51,7 @@ func (p *PgStorage) Get() ([]*callmelater.RequestData, error) {
 		return nil, err
 	}
 
-	var r []*callmelater.RequestData
+	var r []*server.RequestData
 	//loop over rows and add to slice
 	for rows.Next() {
 		pgRow := &PgRow{}
@@ -69,7 +69,7 @@ func (p *PgStorage) Get() ([]*callmelater.RequestData, error) {
 	return r, nil
 }
 
-func (p *PgStorage) Set(data *callmelater.RequestData) error {
+func (p *PgStorage) Set(data *server.RequestData) error {
 	var _, err = p.db.Exec(
 		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
 		data.RequestId,

@@ -1,4 +1,4 @@
-package callmelater
+package server
 
 import (
 	"fmt"
@@ -18,11 +18,11 @@ const (
 	HeaderResponseMethod = HeaderPrefix + "Response-Method"
 )
 
-type api struct {
+type apiServer struct {
 	worker *worker
 }
 
-func (a *api) handler(w http.ResponseWriter, r *http.Request) {
+func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 	requestUrl, err := url.Parse(r.Header.Get(HeaderRequestUrl))
 	if err != nil {
 		log.
@@ -83,7 +83,7 @@ func (a *api) handler(w http.ResponseWriter, r *http.Request) {
 		Msg("Request accepted")
 }
 
-func (a *api) saveRequest(rd *RequestData) {
+func (a *apiServer) saveRequest(rd *RequestData) {
 	err := a.worker.storage.Set(rd)
 	if err != nil {
 		log.
@@ -99,7 +99,7 @@ func (a *api) saveRequest(rd *RequestData) {
 }
 
 func handleRequests(worker *worker) {
-	a := &api{
+	a := &apiServer{
 		worker: worker,
 	}
 

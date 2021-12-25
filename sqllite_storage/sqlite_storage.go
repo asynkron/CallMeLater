@@ -16,7 +16,7 @@ type SqLiteStorage struct {
 type SqLiteRow struct {
 	RequestId string
 	Timestamp time.Time
-	Data      callmelater.RequestData
+	Data      server.RequestData
 }
 
 func New(connectionString string) *SqLiteStorage {
@@ -41,7 +41,7 @@ func New(connectionString string) *SqLiteStorage {
 	return &SqLiteStorage{db: db}
 }
 
-func (sl *SqLiteStorage) Get() ([]*callmelater.RequestData, error) {
+func (sl *SqLiteStorage) Get() ([]*server.RequestData, error) {
 	//gets the top 1000 requests
 	rows, err := sl.db.Query(`SELECT * FROM "Requests" ORDER BY "Timestamp" DESC LIMIT 100`)
 	if err != nil {
@@ -52,7 +52,7 @@ func (sl *SqLiteStorage) Get() ([]*callmelater.RequestData, error) {
 		return nil, err
 	}
 
-	var r []*callmelater.RequestData
+	var r []*server.RequestData
 	//loop over rows and add to slice
 	for rows.Next() {
 		pgRow := &pg_storage.PgRow{}
@@ -70,7 +70,7 @@ func (sl *SqLiteStorage) Get() ([]*callmelater.RequestData, error) {
 	return r, nil
 }
 
-func (sl *SqLiteStorage) Set(data *callmelater.RequestData) error {
+func (sl *SqLiteStorage) Set(data *server.RequestData) error {
 	var _, err = sl.db.Exec(
 		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
 		data.RequestId,

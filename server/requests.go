@@ -1,4 +1,4 @@
-package callmelater
+package server
 
 import (
 	"bytes"
