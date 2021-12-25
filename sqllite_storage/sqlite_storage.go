@@ -2,6 +2,7 @@ package sqllite_storage
 
 import (
 	"database/sql"
+	"encoding/json"
 	"github.com/asynkron/CallMeLater/pg_storage"
 	"github.com/asynkron/CallMeLater/server"
 	_ "github.com/mattn/go-sqlite3"
@@ -16,7 +17,7 @@ type SqLiteStorage struct {
 type SqLiteRow struct {
 	RequestId string
 	Timestamp time.Time
-	Data      server.RequestData
+	Data      string
 }
 
 func New(connectionString string) *SqLiteStorage {
@@ -63,18 +64,38 @@ func (sl *SqLiteStorage) Pull(count int) ([]*server.RequestData, error) {
 
 			return nil, err
 		}
-		r = append(r, &pgRow.Data)
+		rr := &server.RequestData{}
+		var d = []byte(pgRow.Data)
+		err = json.Unmarshal(d, rr)
+		if err != nil {
+			log.
+				Err(err).
+				Msg("Failed to unmarshal row")
+
+			return nil, err
+		}
+		r = append(r, rr)
 	}
 
 	return r, nil
 }
 
 func (sl *SqLiteStorage) Push(data *server.RequestData) error {
-	var _, err = sl.db.Exec(
+
+	j, err := json.Marshal(data)
+	if err != nil {
+		log.
+			Err(err).
+			Msg("Failed to marshal data")
+
+		return err
+	}
+
+	_, err = sl.db.Exec(
 		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
 		data.RequestId,
 		data.When,
-		data,
+		j,
 	)
 
 	log.Info().

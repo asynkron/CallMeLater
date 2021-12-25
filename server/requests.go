@@ -2,8 +2,6 @@ package server
 
 import (
 	"bytes"
-	"database/sql/driver"
-	"encoding/json"
 	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
@@ -124,24 +122,4 @@ func sendRequest(p *RequestData) (*responseData, error) {
 	}
 
 	return res, nil
-}
-
-// Make the Attrs struct implement the driver.Valuer interface. This method
-// simply returns the JSON-encoded representation of the struct.
-func (a *RequestData) Value() (driver.Value, error) {
-	return json.Marshal(a)
-}
-
-func (p *RequestData) Scan(src interface{}) error {
-	source, ok := src.([]byte)
-	if !ok {
-		return nil
-	}
-
-	err := json.Unmarshal(source, p)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
