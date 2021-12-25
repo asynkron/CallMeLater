@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -28,7 +29,7 @@ type responseData struct {
 	ResponseMethod string              `json:"response_method,omitempty"`
 }
 
-func sendRequestResponse(rd *requestData) {
+func sendRequestResponse(rd *requestData, wg *sync.WaitGroup) {
 	response, err := sendRequest(rd)
 
 	err2 := storage.Delete(rd.RequestId)
@@ -37,6 +38,7 @@ func sendRequestResponse(rd *requestData) {
 			Err(err2).
 			Msg("Error deleting request")
 	}
+	wg.Done()
 
 	if err != nil {
 		log.
@@ -78,7 +80,7 @@ func sendResponse(rd *responseData) error {
 		return err
 	}
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
+	_, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		log.
 			Err(err).
@@ -88,7 +90,7 @@ func sendResponse(rd *responseData) error {
 	}
 	log.
 		Info().
-		Str("Body", string(body)).Str("Url", rd.ResponseUrl).
+		Str("Url", rd.ResponseUrl).
 		Msg("Response sent")
 
 	return nil
