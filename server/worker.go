@@ -16,8 +16,9 @@ type worker struct {
 
 func New(storage RequestStorage) *worker {
 	w := &worker{
-		storage:  storage,
-		requests: make(chan *RequestData),
+		storage:   storage,
+		requests:  make(chan *RequestData),
+		pullCount: 100,
 	}
 	go w.run()
 	handleRequests(w)

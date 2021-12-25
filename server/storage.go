@@ -14,6 +14,7 @@ func (n NoopStorage) Pull(int) ([]*RequestData, error) {
 	log.
 		Info().
 		Msg("NoopStorage.Pull")
+
 	return nil, nil
 }
 
