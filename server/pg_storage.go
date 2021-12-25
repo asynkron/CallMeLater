@@ -1,4 +1,4 @@
-package main
+package callmelater
 
 import (
 	"database/sql"
@@ -19,7 +19,7 @@ type PgRow struct {
 	Data      requestData
 }
 
-func newPgStorage(connectionString string) *PgStorage {
+func NewPgStorage(connectionString string) *PgStorage {
 	log.
 		Info().
 		Str("connectionString", connectionString).

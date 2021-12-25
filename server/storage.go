@@ -1,4 +1,4 @@
-package main
+package callmelater
 
 import "github.com/rs/zerolog/log"
 

@@ -1,4 +1,4 @@
-package main
+package callmelater
 
 import (
 	"database/sql"
@@ -19,7 +19,7 @@ type SqLiteRow struct {
 	Data      requestData
 }
 
-func newSqLiteStorage(connectionString string) *SqLiteStorage {
+func NewSqLiteStorage(connectionString string) *SqLiteStorage {
 	log.
 		Info().
 		Str("connectionString", connectionString).

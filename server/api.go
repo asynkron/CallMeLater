@@ -1,4 +1,4 @@
-package main
+package callmelater
 
 import (
 	"fmt"
@@ -18,7 +18,11 @@ const (
 	HeaderResponseMethod = HeaderPrefix + "Response-Method"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+type api struct {
+	worker *worker
+}
+
+func (a *api) handler(w http.ResponseWriter, r *http.Request) {
 	requestUrl, err := url.Parse(r.Header.Get(HeaderRequestUrl))
 	if err != nil {
 		log.
@@ -71,7 +75,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		Body:           body,
 	}
 
-	saveRequest(p)
+	a.saveRequest(p)
 
 	w.WriteHeader(http.StatusAccepted)
 	fmt.Fprint(w, "OK")
@@ -79,8 +83,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		Msg("Request accepted")
 }
 
-func saveRequest(rd *requestData) {
-	err := storage.Set(rd)
+func (a *api) saveRequest(rd *requestData) {
+	err := a.worker.storage.Set(rd)
 	if err != nil {
 		log.
 			Err(err).
@@ -91,11 +95,15 @@ func saveRequest(rd *requestData) {
 		Info().
 		Msg("Saved Request")
 
-	requests <- rd
+	a.worker.requests <- rd
 }
 
-func handleRequests() {
-	http.HandleFunc("/later", handler)
+func handleRequests(worker *worker) {
+	a := &api{
+		worker: worker,
+	}
+
+	http.HandleFunc("/later", a.handler)
 	err := http.ListenAndServe(":10000", nil)
 	log.
 		Err(err).

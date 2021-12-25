@@ -1,15 +1,10 @@
 package main
 
 import (
+	"github.com/asynkron/CallMeLater/server"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"os"
-)
-
-var (
-	storage  RequestStorage
-	requests = make(chan *requestData)
-	hasMore  = false
 )
 
 func main() {
@@ -18,10 +13,9 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	// PSQL
-	storage = newPgStorage("postgres://postgres:postgres@localhost:5432/callme?sslmode=disable")
+	storage := callmelater.NewPgStorage("postgres://postgres:postgres@localhost:5432/callme?sslmode=disable")
 	// SQLite
 	// storage = newSqLiteStorage("file:storage.db?cache=shared&mode=memory")
 
-	go consumeLoop()
-	handleRequests()
+	_ = callmelater.New(storage)
 }
