@@ -1,6 +1,15 @@
 package server
 
-import "github.com/rs/zerolog/log"
+import (
+	"github.com/rs/zerolog/log"
+	"time"
+)
+
+type Job struct {
+	Id        string
+	Timestamp time.Time
+	Data      []byte
+}
 
 type RequestStorage interface {
 	Pull(count int) ([]*RequestData, error)

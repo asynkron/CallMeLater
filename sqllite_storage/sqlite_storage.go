@@ -54,7 +54,7 @@ func (sl *SqLiteStorage) Pull(count int) ([]*server.RequestData, error) {
 	var r []*server.RequestData
 	//loop over rows and add to slice
 	for rows.Next() {
-		pgRow := &pg_storage.PgRow{}
+		pgRow := &pg_storage.PgJob{}
 		err := rows.Scan(&pgRow.RequestId, &pgRow.Timestamp, &pgRow.Data)
 		if err != nil {
 			log.

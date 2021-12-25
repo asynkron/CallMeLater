@@ -2,6 +2,7 @@ package pg_storage
 
 import (
 	"database/sql"
+	"encoding/json"
 	"github.com/asynkron/CallMeLater/server"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
@@ -12,10 +13,10 @@ type PgStorage struct {
 	db *sql.DB
 }
 
-type PgRow struct {
+type PgJob struct {
 	RequestId string
 	Timestamp time.Time
-	Data      server.RequestData
+	Data      string
 }
 
 func New(connectionString string) *PgStorage {
@@ -53,7 +54,7 @@ func (p *PgStorage) Pull(count int) ([]*server.RequestData, error) {
 	var r []*server.RequestData
 	//loop over rows and add to slice
 	for rows.Next() {
-		pgRow := &PgRow{}
+		pgRow := &PgJob{}
 		err := rows.Scan(&pgRow.RequestId, &pgRow.Timestamp, &pgRow.Data)
 		if err != nil {
 			log.
@@ -62,18 +63,40 @@ func (p *PgStorage) Pull(count int) ([]*server.RequestData, error) {
 
 			return nil, err
 		}
-		r = append(r, &pgRow.Data)
+
+		rr := &server.RequestData{}
+		var d = []byte(pgRow.Data)
+		err = json.Unmarshal(d, rr)
+		if err != nil {
+			log.
+				Err(err).
+				Msg("Failed to unmarshal row")
+
+			return nil, err
+		}
+
+		r = append(r, rr)
 	}
 
 	return r, nil
 }
 
 func (p *PgStorage) Push(data *server.RequestData) error {
-	var _, err = p.db.Exec(
+
+	j, err := json.Marshal(data)
+	if err != nil {
+		log.
+			Err(err).
+			Msg("Failed to marshal data")
+
+		return err
+	}
+
+	_, err = p.db.Exec(
 		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
 		data.RequestId,
 		data.When,
-		data,
+		j,
 	)
 
 	log.Info().
