@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -29,16 +28,10 @@ type responseData struct {
 	ResponseMethod string              `json:"response_method,omitempty"`
 }
 
-func sendRequestResponse(rd *requestData, wg *sync.WaitGroup) {
-	response, err := sendRequest(rd)
+func sendRequestResponse(rd *requestData) {
+	//if the request fails after this, it will be lost
 
-	err2 := storage.Delete(rd.RequestId)
-	if err2 != nil {
-		log.
-			Err(err2).
-			Msg("Error deleting request")
-	}
-	wg.Done()
+	response, err := sendRequest(rd)
 
 	if err != nil {
 		log.

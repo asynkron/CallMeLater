@@ -3,10 +3,10 @@ package main
 import (
 	"github.com/rs/zerolog/log"
 	"sort"
-	"sync"
 	"time"
 )
 
+// TODO: make this all less hacky
 func consumeLoop() {
 	pendingRequests, err := storage.Get()
 	if err != nil {
@@ -65,18 +65,22 @@ func consumeLoop() {
 }
 
 func sendExpiredRequests(pendingRequests []*requestData) ([]*requestData, error) {
-	var wg sync.WaitGroup
 	for _, erd := range pendingRequests {
 		if erd.When.Before(time.Now()) {
-			wg.Add(1)
-			go sendRequestResponse(erd, &wg)
+			//delete the request from the DB.
+			err := storage.Delete(erd.RequestId)
+			if err != nil {
+				log.
+					Err(err).
+					Msg("Error deleting request")
+			}
+
+			go sendRequestResponse(erd)
 			pendingRequests = pendingRequests[1:]
 		} else {
 			break
 		}
 	}
-
-	wg.Wait()
 
 	pendingRequests, err := loadMore(pendingRequests)
 	if err != nil {
