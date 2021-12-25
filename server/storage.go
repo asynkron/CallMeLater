@@ -3,34 +3,34 @@ package server
 import "github.com/rs/zerolog/log"
 
 type RequestStorage interface {
-	Get() ([]*RequestData, error)
-	Set(data *RequestData) error
-	Delete(requestId string) error
+	Pull(count int) ([]*RequestData, error)
+	Push(data *RequestData) error
+	Complete(requestId string) error
 }
 
 type NoopStorage struct{}
 
-func (n NoopStorage) Get() ([]*RequestData, error) {
+func (n NoopStorage) Pull(int) ([]*RequestData, error) {
 	log.
 		Info().
-		Msg("NoopStorage.Get")
+		Msg("NoopStorage.Pull")
 	return nil, nil
 }
 
-func (n NoopStorage) Set(data *RequestData) error {
+func (n NoopStorage) Push(data *RequestData) error {
 	log.
 		Info().
 		Str("id", data.RequestId).
-		Msg("NoopStorage.Set")
+		Msg("NoopStorage.Push")
 
 	return nil
 }
 
-func (n NoopStorage) Delete(requestId string) error {
+func (n NoopStorage) Complete(requestId string) error {
 	log.
 		Info().
 		Str("id", requestId).
-		Msg("NoopStorage.Delete")
+		Msg("NoopStorage.Complete")
 
 	return nil
 }

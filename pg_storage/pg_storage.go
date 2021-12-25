@@ -40,9 +40,8 @@ func New(connectionString string) *PgStorage {
 	return &PgStorage{db: db}
 }
 
-func (p *PgStorage) Get() ([]*server.RequestData, error) {
-	//gets the top 1000 requests
-	rows, err := p.db.Query(`SELECT * FROM "Requests" ORDER BY "Timestamp" DESC LIMIT 100`)
+func (p *PgStorage) Pull(count int) ([]*server.RequestData, error) {
+	rows, err := p.db.Query(`SELECT * FROM "Requests" ORDER BY "Timestamp" DESC LIMIT $1`, count)
 	if err != nil {
 		log.
 			Err(err).
@@ -69,7 +68,7 @@ func (p *PgStorage) Get() ([]*server.RequestData, error) {
 	return r, nil
 }
 
-func (p *PgStorage) Set(data *server.RequestData) error {
+func (p *PgStorage) Push(data *server.RequestData) error {
 	var _, err = p.db.Exec(
 		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
 		data.RequestId,
@@ -84,7 +83,7 @@ func (p *PgStorage) Set(data *server.RequestData) error {
 	return err
 }
 
-func (p *PgStorage) Delete(requestId string) error {
+func (p *PgStorage) Complete(requestId string) error {
 	var _, err = p.db.Exec(
 		`DELETE FROM "Requests" WHERE "RequestId" = $1`,
 		requestId,

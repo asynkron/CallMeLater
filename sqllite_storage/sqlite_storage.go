@@ -41,9 +41,8 @@ func New(connectionString string) *SqLiteStorage {
 	return &SqLiteStorage{db: db}
 }
 
-func (sl *SqLiteStorage) Get() ([]*server.RequestData, error) {
-	//gets the top 1000 requests
-	rows, err := sl.db.Query(`SELECT * FROM "Requests" ORDER BY "Timestamp" DESC LIMIT 100`)
+func (sl *SqLiteStorage) Pull(count int) ([]*server.RequestData, error) {
+	rows, err := sl.db.Query(`SELECT * FROM "Requests" ORDER BY "Timestamp" DESC LIMIT $1`, count)
 	if err != nil {
 		log.
 			Err(err).
@@ -70,7 +69,7 @@ func (sl *SqLiteStorage) Get() ([]*server.RequestData, error) {
 	return r, nil
 }
 
-func (sl *SqLiteStorage) Set(data *server.RequestData) error {
+func (sl *SqLiteStorage) Push(data *server.RequestData) error {
 	var _, err = sl.db.Exec(
 		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
 		data.RequestId,
@@ -85,7 +84,7 @@ func (sl *SqLiteStorage) Set(data *server.RequestData) error {
 	return err
 }
 
-func (sl *SqLiteStorage) Delete(requestId string) error {
+func (sl *SqLiteStorage) Complete(requestId string) error {
 	var _, err = sl.db.Exec(
 		`DELETE FROM "Requests" WHERE "RequestId" = $1`,
 		requestId,

@@ -7,10 +7,11 @@ import (
 )
 
 type worker struct {
-	storage  RequestStorage
-	hasMore  bool
-	requests chan *RequestData
-	pending  []*RequestData
+	storage   RequestStorage
+	hasMore   bool
+	requests  chan *RequestData
+	pending   []*RequestData
+	pullCount int
 }
 
 func New(storage RequestStorage) *worker {
@@ -26,7 +27,7 @@ func New(storage RequestStorage) *worker {
 // TODO: make this all less hacky
 func (w *worker) run() {
 	var err error
-	w.pending, err = w.storage.Get()
+	w.pending, err = w.storage.Pull(w.pullCount)
 	if err != nil {
 		log.
 			Err(err).
@@ -89,7 +90,7 @@ func (w *worker) sendExpiredRequests() error {
 	for _, erd := range w.pending {
 		if erd.When.Before(time.Now()) {
 			//delete the request from the DB.
-			err := w.storage.Delete(erd.RequestId)
+			err := w.storage.Complete(erd.RequestId)
 			if err != nil {
 				log.
 					Err(err).
@@ -104,11 +105,8 @@ func (w *worker) sendExpiredRequests() error {
 	}
 
 	err := w.loadMore()
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func (w *worker) loadMore() error {
@@ -124,7 +122,7 @@ func (w *worker) loadMore() error {
 		Info().
 		Msg("Loading more")
 
-	pr, err := w.storage.Get()
+	pr, err := w.storage.Pull(w.pullCount)
 	if err != nil {
 		return err
 	}

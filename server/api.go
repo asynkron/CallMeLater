@@ -84,7 +84,7 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *apiServer) saveRequest(rd *RequestData) {
-	err := a.worker.storage.Set(rd)
+	err := a.worker.storage.Push(rd)
 	if err != nil {
 		log.
 			Err(err).
