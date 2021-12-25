@@ -20,7 +20,7 @@ func main() {
 	// PSQL
 	storage = newPgStorage("postgres://postgres:postgres@localhost:5432/callme?sslmode=disable")
 	// SQLite
-	storage = newSqLiteStorage("file:storage.db?cache=shared&mode=memory")
+	// storage = newSqLiteStorage("file:storage.db?cache=shared&mode=memory")
 
 	go consumeLoop()
 	handleRequests()
