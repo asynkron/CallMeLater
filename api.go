@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	HeaderRequestUrl     = "X-Later-Request-Url"
-	HeaderWhen           = "X-Later-When"
-	HeaderResponseUrl    = "X-Later-Response-Url"
-	HeaderResponseMethod = "X-Later-Response-Method"
+	HeaderPrefix         = "X-Later-"
+	HeaderRequestUrl     = HeaderPrefix + "Request-Url"
+	HeaderWhen           = HeaderPrefix + "When"
+	HeaderResponseUrl    = HeaderPrefix + "Response-Url"
+	HeaderResponseMethod = HeaderPrefix + "Response-Method"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
