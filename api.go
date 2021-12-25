@@ -11,31 +11,35 @@ import (
 	"time"
 )
 
+const (
+	HeaderRequestUrl     = "X-Later-Request-Url"
+	HeaderWhen           = "X-Later-When"
+	HeaderResponseUrl    = "X-Later-Response-Url"
+	HeaderResponseMethod = "X-Later-Response-Method"
+)
+
 func handler(w http.ResponseWriter, r *http.Request) {
-	//X-Later-Request-Url 	- url to sendRequest
-	requestUrl, err := url.Parse(r.Header.Get("X-Later-Request-Url"))
+	requestUrl, err := url.Parse(r.Header.Get(HeaderRequestUrl))
 	if err != nil {
 		log.
 			Err(err).
 			Msg("Failed to parse request url")
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "Failed to parse X-Later-Request-Url")
+		fmt.Fprint(w, "Failed to parse "+HeaderRequestUrl)
 		return
 	}
-	//X-Later-When 			- UTC timestamp
-	when, err := time.ParseDuration(r.Header.Get("X-Later-When"))
+	when, err := time.ParseDuration(r.Header.Get(HeaderWhen))
 	if err != nil {
 		log.
 			Err(err).
 			Msg("failed to parse when")
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "Failed to parse X-Later-When")
+		fmt.Fprint(w, "Failed to parse "+HeaderWhen)
 		return
 	}
-	//X-Later-Response-Url 	- webhook to send results to
-	tmp := r.Header.Get("X-Later-Response-Url")
+	tmp := r.Header.Get(HeaderResponseUrl)
 	var responseUrlStr string
 	if tmp != "" {
 		responseUrl, err := url.Parse(tmp)
@@ -45,7 +49,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				Msg("failed to parse response url")
 
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprint(w, "Failed to parse X-Later-Response-Url")
+			fmt.Fprint(w, "Failed to parse "+HeaderResponseUrl)
 			return
 		}
 		responseUrlStr = responseUrl.String()
@@ -60,7 +64,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		RequestUrl:     requestUrl.String(),
 		RequestMethod:  r.Method,
 		ResponseUrl:    responseUrlStr,
-		ResponseMethod: r.Header.Get("X-Later-Response-RequestMethod"),
+		ResponseMethod: r.Header.Get(HeaderResponseMethod),
 		When:           t,
 		Header:         r.Header,
 		Form:           r.Form,
