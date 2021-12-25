@@ -9,6 +9,7 @@ import (
 var (
 	storage  RequestStorage
 	requests = make(chan *requestData)
+	hasMore  = false
 )
 
 func main() {

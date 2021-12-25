@@ -7,7 +7,13 @@ import (
 )
 
 func consumeLoop() {
-	var pendingRequests []*requestData
+	pendingRequests, err := storage.Get()
+	if err != nil {
+		log.
+			Err(err).
+			Msg("failed to get pending requests")
+		return
+	}
 
 	log.
 		Info().
@@ -32,6 +38,7 @@ func consumeLoop() {
 
 			if len(pendingRequests) > 100 {
 				pendingRequests = pendingRequests[0:100]
+				hasMore = true
 			}
 
 		case <-time.After(time.Second):
@@ -51,6 +58,26 @@ func sendExpiredRequests(pendingRequests []*requestData) []*requestData {
 			pendingRequests = pendingRequests[1:]
 		} else {
 			break
+		}
+	}
+
+	pendingRequests = loadMore(pendingRequests)
+
+	return pendingRequests
+}
+
+func loadMore(pendingRequests []*requestData) []*requestData {
+	log.
+		Info().
+		Msg("Loading more")
+
+	if len(pendingRequests) == 0 {
+		pendingRequests, err := storage.Get()
+		if err != nil {
+			log.
+				Err(err).
+				Msg("failed to get pending requests")
+			return pendingRequests
 		}
 	}
 	return pendingRequests

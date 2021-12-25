@@ -30,6 +30,14 @@ type responseData struct {
 
 func sendRequestResponse(rd *requestData) {
 	response, err := sendRequest(rd)
+
+	err2 := storage.Delete(rd.RequestId)
+	if err2 != nil {
+		log.
+			Err(err2).
+			Msg("Error deleting request")
+	}
+
 	if err != nil {
 		log.
 			Err(err).
@@ -48,13 +56,6 @@ func sendRequestResponse(rd *requestData) {
 		}
 	} else {
 		log.Info().Msg("No response url")
-	}
-
-	err = storage.Delete(rd.RequestId)
-	if err != nil {
-		log.
-			Err(err).
-			Msg("Error deleting request")
 	}
 }
 

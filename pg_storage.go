@@ -14,9 +14,9 @@ type PgStorage struct {
 }
 
 type PgRow struct {
-	id   int
-	when time.Time
-	data *requestData
+	RequestId string
+	Timestamp time.Time
+	Data      requestData
 }
 
 func newPgStorage(connectionString string) *PgStorage {
@@ -43,7 +43,7 @@ func newPgStorage(connectionString string) *PgStorage {
 
 func (p *PgStorage) Get() ([]*requestData, error) {
 	//gets the top 1000 requests
-	rows, err := p.db.Query("SELECT * FROM requests ORDER BY id DESC LIMIT 1000")
+	rows, err := p.db.Query(`SELECT * FROM "Requests" ORDER BY "Timestamp" DESC LIMIT 100`)
 	if err != nil {
 		log.
 			Err(err).
@@ -56,7 +56,7 @@ func (p *PgStorage) Get() ([]*requestData, error) {
 	//loop over rows and add to slice
 	for rows.Next() {
 		pgRow := &PgRow{}
-		err := rows.Scan(&pgRow.id, &pgRow.when, &pgRow.data)
+		err := rows.Scan(&pgRow.RequestId, &pgRow.Timestamp, &pgRow.Data)
 		if err != nil {
 			log.
 				Err(err).
@@ -64,7 +64,7 @@ func (p *PgStorage) Get() ([]*requestData, error) {
 
 			return nil, err
 		}
-		r = append(r, pgRow.data)
+		r = append(r, &pgRow.Data)
 	}
 
 	return r, nil
@@ -74,6 +74,20 @@ func (p *PgStorage) Get() ([]*requestData, error) {
 // simply returns the JSON-encoded representation of the struct.
 func (a *requestData) Value() (driver.Value, error) {
 	return json.Marshal(a)
+}
+
+func (p *requestData) Scan(src interface{}) error {
+	source, ok := src.([]byte)
+	if !ok {
+		return nil
+	}
+
+	err := json.Unmarshal(source, p)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *PgStorage) Set(data *requestData) error {
