@@ -63,7 +63,7 @@ func (a *api) handler(w http.ResponseWriter, r *http.Request) {
 
 	t := time.Now().Add(when)
 
-	var p = &requestData{
+	var p = &RequestData{
 		RequestId:      uuid.New().String(),
 		RequestUrl:     requestUrl.String(),
 		RequestMethod:  r.Method,
@@ -83,7 +83,7 @@ func (a *api) handler(w http.ResponseWriter, r *http.Request) {
 		Msg("Request accepted")
 }
 
-func (a *api) saveRequest(rd *requestData) {
+func (a *api) saveRequest(rd *RequestData) {
 	err := a.worker.storage.Set(rd)
 	if err != nil {
 		log.

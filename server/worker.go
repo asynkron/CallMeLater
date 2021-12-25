@@ -9,14 +9,14 @@ import (
 type worker struct {
 	storage  RequestStorage
 	hasMore  bool
-	requests chan *requestData
-	pending  []*requestData
+	requests chan *RequestData
+	pending  []*RequestData
 }
 
 func New(storage RequestStorage) *worker {
 	w := &worker{
 		storage:  storage,
-		requests: make(chan *requestData),
+		requests: make(chan *RequestData),
 	}
 	go w.run()
 	handleRequests(w)

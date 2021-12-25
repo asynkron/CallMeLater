@@ -2,6 +2,8 @@ package callmelater
 
 import (
 	"bytes"
+	"database/sql/driver"
+	"encoding/json"
 	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
@@ -9,7 +11,7 @@ import (
 	"time"
 )
 
-type requestData struct {
+type RequestData struct {
 	RequestId      string              `json:"request_id,omitempty"`
 	RequestMethod  string              `json:"request_method,omitempty"`
 	Header         map[string][]string `json:"header,omitempty"`
@@ -28,7 +30,7 @@ type responseData struct {
 	ResponseMethod string              `json:"response_method,omitempty"`
 }
 
-func sendRequestResponse(rd *requestData) {
+func sendRequestResponse(rd *RequestData) {
 	//if the request fails after this, it will be lost
 
 	response, err := sendRequest(rd)
@@ -89,7 +91,7 @@ func sendResponse(rd *responseData) error {
 	return nil
 }
 
-func sendRequest(p *requestData) (*responseData, error) {
+func sendRequest(p *RequestData) (*responseData, error) {
 	log.
 		Info().
 		Str("Url", p.RequestUrl).
@@ -122,4 +124,24 @@ func sendRequest(p *requestData) (*responseData, error) {
 	}
 
 	return res, nil
+}
+
+// Make the Attrs struct implement the driver.Valuer interface. This method
+// simply returns the JSON-encoded representation of the struct.
+func (a *RequestData) Value() (driver.Value, error) {
+	return json.Marshal(a)
+}
+
+func (p *RequestData) Scan(src interface{}) error {
+	source, ok := src.([]byte)
+	if !ok {
+		return nil
+	}
+
+	err := json.Unmarshal(source, p)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

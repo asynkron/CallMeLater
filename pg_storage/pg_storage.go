@@ -1,9 +1,8 @@
-package callmelater
+package pg_storage
 
 import (
 	"database/sql"
-	"database/sql/driver"
-	"encoding/json"
+	"github.com/asynkron/CallMeLater/server"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 	"time"
@@ -16,10 +15,10 @@ type PgStorage struct {
 type PgRow struct {
 	RequestId string
 	Timestamp time.Time
-	Data      requestData
+	Data      callmelater.RequestData
 }
 
-func NewPgStorage(connectionString string) *PgStorage {
+func New(connectionString string) *PgStorage {
 	log.
 		Info().
 		Str("connectionString", connectionString).
@@ -41,7 +40,7 @@ func NewPgStorage(connectionString string) *PgStorage {
 	return &PgStorage{db: db}
 }
 
-func (p *PgStorage) Get() ([]*requestData, error) {
+func (p *PgStorage) Get() ([]*callmelater.RequestData, error) {
 	//gets the top 1000 requests
 	rows, err := p.db.Query(`SELECT * FROM "Requests" ORDER BY "Timestamp" DESC LIMIT 100`)
 	if err != nil {
@@ -52,7 +51,7 @@ func (p *PgStorage) Get() ([]*requestData, error) {
 		return nil, err
 	}
 
-	var r []*requestData
+	var r []*callmelater.RequestData
 	//loop over rows and add to slice
 	for rows.Next() {
 		pgRow := &PgRow{}
@@ -70,27 +69,7 @@ func (p *PgStorage) Get() ([]*requestData, error) {
 	return r, nil
 }
 
-// Make the Attrs struct implement the driver.Valuer interface. This method
-// simply returns the JSON-encoded representation of the struct.
-func (a *requestData) Value() (driver.Value, error) {
-	return json.Marshal(a)
-}
-
-func (p *requestData) Scan(src interface{}) error {
-	source, ok := src.([]byte)
-	if !ok {
-		return nil
-	}
-
-	err := json.Unmarshal(source, p)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (p *PgStorage) Set(data *requestData) error {
+func (p *PgStorage) Set(data *callmelater.RequestData) error {
 	var _, err = p.db.Exec(
 		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
 		data.RequestId,

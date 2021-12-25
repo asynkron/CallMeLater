@@ -1,9 +1,9 @@
-package callmelater
+package sqllite_storage
 
 import (
 	"database/sql"
-	"database/sql/driver"
-	"encoding/json"
+	"github.com/asynkron/CallMeLater/pg_storage"
+	"github.com/asynkron/CallMeLater/server"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 	"time"
@@ -16,10 +16,10 @@ type SqLiteStorage struct {
 type SqLiteRow struct {
 	RequestId string
 	Timestamp time.Time
-	Data      requestData
+	Data      callmelater.RequestData
 }
 
-func NewSqLiteStorage(connectionString string) *SqLiteStorage {
+func New(connectionString string) *SqLiteStorage {
 	log.
 		Info().
 		Str("connectionString", connectionString).
@@ -41,7 +41,7 @@ func NewSqLiteStorage(connectionString string) *SqLiteStorage {
 	return &SqLiteStorage{db: db}
 }
 
-func (sl *SqLiteStorage) Get() ([]*requestData, error) {
+func (sl *SqLiteStorage) Get() ([]*callmelater.RequestData, error) {
 	//gets the top 1000 requests
 	rows, err := sl.db.Query(`SELECT * FROM "Requests" ORDER BY "Timestamp" DESC LIMIT 100`)
 	if err != nil {
@@ -52,10 +52,10 @@ func (sl *SqLiteStorage) Get() ([]*requestData, error) {
 		return nil, err
 	}
 
-	var r []*requestData
+	var r []*callmelater.RequestData
 	//loop over rows and add to slice
 	for rows.Next() {
-		pgRow := &PgRow{}
+		pgRow := &pg_storage.PgRow{}
 		err := rows.Scan(&pgRow.RequestId, &pgRow.Timestamp, &pgRow.Data)
 		if err != nil {
 			log.
@@ -70,27 +70,7 @@ func (sl *SqLiteStorage) Get() ([]*requestData, error) {
 	return r, nil
 }
 
-// Make the Attrs struct implement the driver.Valuer interface. This method
-// simply returns the JSON-encoded representation of the struct.
-func (a *requestData) Values() (driver.Value, error) {
-	return json.Marshal(a)
-}
-
-func (sl *requestData) Scans(src interface{}) error {
-	source, ok := src.([]byte)
-	if !ok {
-		return nil
-	}
-
-	err := json.Unmarshal(source, sl)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (sl *SqLiteStorage) Set(data *requestData) error {
+func (sl *SqLiteStorage) Set(data *callmelater.RequestData) error {
 	var _, err = sl.db.Exec(
 		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
 		data.RequestId,
