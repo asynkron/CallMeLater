@@ -17,7 +17,11 @@ func main() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
+	// PSQL
 	storage = newPgStorage("postgres://postgres:postgres@localhost:5432/callme?sslmode=disable")
+	// SQLite
+	storage = newSqLiteStorage("file:storage.db?cache=shared&mode=memory")
+
 	go consumeLoop()
 	handleRequests()
 }
