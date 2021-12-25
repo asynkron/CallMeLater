@@ -1,7 +1,6 @@
 package main
 
 import (
-	json2 "encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -81,13 +80,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func saveRequest(rd *requestData) {
-	j, err := json2.Marshal(rd)
-	if err != nil {
-		return
-	}
-	json := string(j)
-
-	err = storage.Set(rd)
+	err := storage.Set(rd)
 	if err != nil {
 		log.
 			Err(err).
@@ -96,7 +89,7 @@ func saveRequest(rd *requestData) {
 	}
 	log.
 		Info().
-		Str("Json", json).Msg("Saved Request")
+		Msg("Saved Request")
 
 	requests <- rd
 }
