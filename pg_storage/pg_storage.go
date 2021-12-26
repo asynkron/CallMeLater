@@ -14,9 +14,11 @@ type PgStorage struct {
 }
 
 type PgJob struct {
-	RequestId string
-	Timestamp time.Time
-	Data      string
+	RequestId          string
+	ScheduledTimestamp time.Time
+	CreatedTimestamp   time.Time
+	CompletedTimestamp sql.NullTime
+	Data               string
 }
 
 func New(connectionString string) *PgStorage {
@@ -42,7 +44,7 @@ func New(connectionString string) *PgStorage {
 }
 
 func (p *PgStorage) Pull(count int) ([]*server.RequestData, error) {
-	rows, err := p.db.Query(`SELECT * FROM "Requests" ORDER BY "Timestamp" DESC LIMIT $1`, count)
+	rows, err := p.db.Query(`SELECT * FROM "Requests" ORDER BY "ScheduledTimestamp" DESC LIMIT $1`, count)
 	if err != nil {
 		log.
 			Err(err).
@@ -55,7 +57,13 @@ func (p *PgStorage) Pull(count int) ([]*server.RequestData, error) {
 	//loop over rows and add to slice
 	for rows.Next() {
 		pgRow := &PgJob{}
-		err := rows.Scan(&pgRow.RequestId, &pgRow.Timestamp, &pgRow.Data)
+		err := rows.Scan(
+			&pgRow.RequestId,
+			&pgRow.ScheduledTimestamp,
+			&pgRow.CreatedTimestamp,
+			&pgRow.CompletedTimestamp,
+			&pgRow.Data,
+		)
 		if err != nil {
 			log.
 				Err(err).
@@ -92,10 +100,19 @@ func (p *PgStorage) Push(data *server.RequestData) error {
 		return err
 	}
 
+	pgRow := &PgJob{
+		RequestId:          data.RequestId,
+		ScheduledTimestamp: data.ScheduledTimestamp,
+		CreatedTimestamp:   time.Now(),
+		Data:               string(j),
+	}
+
 	_, err = p.db.Exec(
-		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
-		data.RequestId,
-		data.When,
+		`INSERT INTO "Requests" VALUES ($1, $2, $3, $4, $5)`,
+		pgRow.RequestId,
+		pgRow.ScheduledTimestamp,
+		pgRow.CreatedTimestamp,
+		nil,
 		j,
 	)
 

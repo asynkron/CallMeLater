@@ -66,15 +66,15 @@ func (w *worker) appendRequest(rd *RequestData) {
 	w.pending = append(w.pending, rd)
 
 	sort.Slice(w.pending, func(i, j int) bool {
-		w1 := w.pending[i].When
-		w2 := w.pending[j].When
+		w1 := w.pending[i].ScheduledTimestamp
+		w2 := w.pending[j].ScheduledTimestamp
 		return w1.Before(w2)
 	})
 }
 
 func (w *worker) sendExpiredRequests() error {
 	for _, erd := range w.pending {
-		if erd.When.Before(time.Now()) {
+		if erd.ScheduledTimestamp.Before(time.Now()) {
 			//delete the request from the DB.
 			err := w.storage.Complete(erd.RequestId)
 			if err != nil {

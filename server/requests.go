@@ -10,15 +10,15 @@ import (
 )
 
 type RequestData struct {
-	RequestId      string              `json:"request_id,omitempty"`
-	RequestMethod  string              `json:"request_method,omitempty"`
-	Header         map[string][]string `json:"header,omitempty"`
-	Form           map[string][]string `json:"form,omitempty"`
-	RequestUrl     string              `json:"request_url,omitempty"`
-	ResponseUrl    string              `json:"response_url,omitempty"`
-	ResponseMethod string              `json:"response_method,omitempty"`
-	When           time.Time           `json:"when"`
-	Body           []byte              `json:"body,omitempty"`
+	RequestId          string              `json:"request_id,omitempty"`
+	RequestMethod      string              `json:"request_method,omitempty"`
+	Header             map[string][]string `json:"header,omitempty"`
+	Form               map[string][]string `json:"form,omitempty"`
+	RequestUrl         string              `json:"request_url,omitempty"`
+	ResponseUrl        string              `json:"response_url,omitempty"`
+	ResponseMethod     string              `json:"response_method,omitempty"`
+	ScheduledTimestamp time.Time           `json:"when"`
+	Body               []byte              `json:"body,omitempty"`
 }
 
 type responseData struct {

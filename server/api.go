@@ -64,15 +64,15 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 	t := time.Now().Add(when)
 
 	var p = &RequestData{
-		RequestId:      uuid.New().String(),
-		RequestUrl:     requestUrl.String(),
-		RequestMethod:  r.Method,
-		ResponseUrl:    responseUrlStr,
-		ResponseMethod: r.Header.Get(HeaderResponseMethod),
-		When:           t,
-		Header:         r.Header,
-		Form:           r.Form,
-		Body:           body,
+		RequestId:          uuid.New().String(),
+		RequestUrl:         requestUrl.String(),
+		RequestMethod:      r.Method,
+		ResponseUrl:        responseUrlStr,
+		ResponseMethod:     r.Header.Get(HeaderResponseMethod),
+		ScheduledTimestamp: t,
+		Header:             r.Header,
+		Form:               r.Form,
+		Body:               body,
 	}
 
 	a.saveRequest(p)

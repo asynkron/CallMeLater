@@ -94,7 +94,7 @@ func (sl *SqLiteStorage) Push(data *server.RequestData) error {
 	_, err = sl.db.Exec(
 		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
 		data.RequestId,
-		data.When,
+		data.ScheduledTimestamp,
 		j,
 	)
 
