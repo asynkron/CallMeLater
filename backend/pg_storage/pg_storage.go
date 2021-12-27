@@ -44,7 +44,15 @@ func New(connectionString string) *PgStorage {
 }
 
 func (p *PgStorage) Pull(count int) ([]*server.RequestData, error) {
-	rows, err := p.db.Query(`SELECT * FROM "Requests" ORDER BY "ScheduledTimestamp" DESC LIMIT $1`, count)
+	rows, err := p.db.Query(
+		`
+		SELECT * 
+		FROM "Requests" 
+		WHERE "CompletedTimestamp" is null  
+		ORDER BY "ScheduledTimestamp" DESC 
+		LIMIT $1`,
+		count,
+	)
 	if err != nil {
 		log.
 			Err(err).
@@ -108,7 +116,9 @@ func (p *PgStorage) Push(data *server.RequestData) error {
 	}
 
 	_, err = p.db.Exec(
-		`INSERT INTO "Requests" VALUES ($1, $2, $3, $4, $5)`,
+		`
+		INSERT INTO "Requests" 
+		VALUES ($1, $2, $3, $4, $5)`,
 		pgRow.RequestId,
 		pgRow.ScheduledTimestamp,
 		pgRow.CreatedTimestamp,
@@ -125,7 +135,11 @@ func (p *PgStorage) Push(data *server.RequestData) error {
 
 func (p *PgStorage) Complete(requestId string) error {
 	var _, err = p.db.Exec(
-		`DELETE FROM "Requests" WHERE "RequestId" = $1`,
+		`
+		UPDATE "Requests" 
+		SET "CompletedTimestamp" = $1 
+		WHERE "RequestId" = $2 `,
+		time.Now(),
 		requestId,
 	)
 
