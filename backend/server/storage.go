@@ -9,8 +9,8 @@ import (
 )
 
 type Job struct {
-	Id                 string `gorm:"primaryKey"`
-	ScheduledTimestamp time.Time
+	Id                 string    `gorm:"primaryKey"`
+	ScheduledTimestamp time.Time `gorm:"index"`
 	CreatedTimestamp   time.Time
 	CompletedTimestamp sql.NullTime `gorm:"index"`
 	Data               string
@@ -33,7 +33,7 @@ type GormStorage struct {
 
 func (g GormStorage) Pull(count int) ([]*RequestData, error) {
 	var jobs []Job
-	err := g.db.Limit(count).Find(&jobs, "completed_timestamp is null").Error
+	err := g.db.Limit(count).Order("scheduled_timestamp asc").Find(&jobs, "completed_timestamp is null").Error
 	if err != nil {
 		return nil, err
 	}
