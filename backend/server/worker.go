@@ -7,14 +7,14 @@ import (
 )
 
 type worker struct {
-	storage   RequestStorage
+	storage   JobStorage
 	hasMore   bool
 	requests  chan *RequestData
 	pending   []*RequestData
 	pullCount int
 }
 
-func New(storage RequestStorage) *worker {
+func New(storage JobStorage) *worker {
 	w := &worker{
 		storage:   storage,
 		requests:  make(chan *RequestData),

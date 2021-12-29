@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/asynkron/CallMeLater/pg_storage"
 	"github.com/asynkron/CallMeLater/server"
+	storage2 "github.com/asynkron/CallMeLater/storage"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"os"
@@ -14,7 +14,7 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	// PSQL
-	storage := pg_storage.New("postgres://postgres:postgres@localhost:5432/callme?sslmode=disable")
+	storage := storage2.NewPg("postgres://postgres:postgres@localhost:5432/callme?sslmode=disable")
 	// SQLite
 	// storage = newSqLiteStorage("file:storage.db?cache=shared&mode=memory")
 
