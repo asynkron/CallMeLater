@@ -73,6 +73,7 @@ func sendRequest(p *RequestData) (*RequestData, error) {
 		RequestUrl:         p.ResponseUrl,
 		RequestMethod:      p.ResponseMethod,
 		ScheduledTimestamp: p.ScheduledTimestamp,
+		ParentId:           p.Id,
 	}
 
 	return res, nil
