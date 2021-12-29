@@ -1,11 +1,9 @@
-package storage
+package server
 
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/asynkron/CallMeLater/server"
 	"github.com/rs/zerolog/log"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"time"
 )
@@ -33,29 +31,30 @@ type GormStorage struct {
 	db *gorm.DB
 }
 
-func (g GormStorage) Pull(count int) ([]*server.RequestData, error) {
+func (g GormStorage) Pull(count int) ([]*RequestData, error) {
 	var jobs []Job
-	err := g.db.Limit(count).Find(&jobs).Error
+	err := g.db.Limit(count).Find(&jobs, "completed_timestamp is null").Error
 	if err != nil {
 		return nil, err
 	}
 
-	var requests []*server.RequestData
+	var requests []*RequestData
 	for _, job := range jobs {
-		request := &server.RequestData{}
+		request := &RequestData{}
 		var d = []byte(job.Data)
 		err = json.Unmarshal(d, request)
 		if err != nil {
 			log.Err(err).Msg("Failed to unmarshal row")
 
-			requests = append(requests, request)
+			continue
 		}
+		requests = append(requests, request)
 	}
 
 	return requests, nil
 }
 
-func (g GormStorage) Push(data *server.RequestData) error {
+func (g GormStorage) Push(data *RequestData) error {
 	j, err := json.Marshal(data)
 	if err != nil {
 		log.Err(err).Msg("Failed to marshal data")
@@ -87,12 +86,7 @@ func (g GormStorage) Complete(requestId string) error {
 	return nil
 }
 
-func NewPg(connectionString string) server.JobStorage {
-	dialector := postgres.Open(connectionString)
-	return New(dialector)
-}
-
-func New(dialector gorm.Dialector) *GormStorage {
+func NewStorage(dialector gorm.Dialector) *GormStorage {
 	db, err := gorm.Open(dialector, &gorm.Config{})
 	q := &GormStorage{db: db}
 	if err != nil {
