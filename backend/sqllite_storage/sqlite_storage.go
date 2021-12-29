@@ -56,7 +56,7 @@ func (sl *SqLiteStorage) Pull(count int) ([]*server.RequestData, error) {
 	//loop over rows and add to slice
 	for rows.Next() {
 		pgRow := &pg_storage.PgJob{}
-		err := rows.Scan(&pgRow.RequestId, &pgRow.Timestamp, &pgRow.Data)
+		err := rows.Scan(&pgRow.Id, &pgRow.Timestamp, &pgRow.Data)
 		if err != nil {
 			log.
 				Err(err).
@@ -93,13 +93,13 @@ func (sl *SqLiteStorage) Push(data *server.RequestData) error {
 
 	_, err = sl.db.Exec(
 		`INSERT INTO "Requests" VALUES ($1, $2, $3)`,
-		data.RequestId,
+		data.Id,
 		data.ScheduledTimestamp,
 		j,
 	)
 
 	log.Info().
-		Str("id", data.RequestId).
+		Str("id", data.Id).
 		Str("Url", data.RequestUrl).
 		Msg("Inserted new request")
 	return err
@@ -107,7 +107,7 @@ func (sl *SqLiteStorage) Push(data *server.RequestData) error {
 
 func (sl *SqLiteStorage) Complete(requestId string) error {
 	var _, err = sl.db.Exec(
-		`DELETE FROM "Requests" WHERE "RequestId" = $1`,
+		`DELETE FROM "Requests" WHERE "Id" = $1`,
 		requestId,
 	)
 
@@ -119,7 +119,7 @@ func (sl *SqLiteStorage) Complete(requestId string) error {
 
 func (sl SqLiteStorage) CreateTable() error {
 	var _, err = sl.db.Exec(
-		`create table Requests (RequestId string not null primary key, Timestamp text, Data text);`)
+		`create table Requests (Id string not null primary key, Timestamp text, Data text);`)
 
 	log.Info().
 		Msg("Created Requests table")

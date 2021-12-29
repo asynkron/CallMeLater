@@ -64,7 +64,7 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 	t := time.Now().Add(when)
 
 	var p = &RequestData{
-		RequestId:          uuid.New().String(),
+		Id:                 uuid.New().String(),
 		RequestUrl:         requestUrl.String(),
 		RequestMethod:      r.Method,
 		ResponseUrl:        responseUrlStr,

@@ -14,11 +14,13 @@ type PgStorage struct {
 }
 
 type PgJob struct {
-	RequestId          string
+	Id                 string
 	ScheduledTimestamp time.Time
 	CreatedTimestamp   time.Time
 	CompletedTimestamp sql.NullTime
 	Data               string
+	RetryCount         int
+	ParentJobId        string
 }
 
 func New(connectionString string) *PgStorage {
@@ -47,7 +49,7 @@ func (p *PgStorage) Pull(count int) ([]*server.RequestData, error) {
 	rows, err := p.db.Query(
 		`
 		SELECT * 
-		FROM "Requests" 
+		FROM "Jobs" 
 		WHERE "CompletedTimestamp" is null  
 		ORDER BY "ScheduledTimestamp" DESC 
 		LIMIT $1`,
@@ -66,11 +68,13 @@ func (p *PgStorage) Pull(count int) ([]*server.RequestData, error) {
 	for rows.Next() {
 		pgRow := &PgJob{}
 		err := rows.Scan(
-			&pgRow.RequestId,
+			&pgRow.Id,
 			&pgRow.ScheduledTimestamp,
 			&pgRow.CreatedTimestamp,
 			&pgRow.CompletedTimestamp,
 			&pgRow.Data,
+			&pgRow.RetryCount,
+			&pgRow.ParentJobId,
 		)
 		if err != nil {
 			log.
@@ -109,7 +113,7 @@ func (p *PgStorage) Push(data *server.RequestData) error {
 	}
 
 	pgRow := &PgJob{
-		RequestId:          data.RequestId,
+		Id:                 data.Id,
 		ScheduledTimestamp: data.ScheduledTimestamp,
 		CreatedTimestamp:   time.Now(),
 		Data:               string(j),
@@ -117,31 +121,49 @@ func (p *PgStorage) Push(data *server.RequestData) error {
 
 	_, err = p.db.Exec(
 		`
-		INSERT INTO "Requests" 
-		VALUES ($1, $2, $3, $4, $5)`,
-		pgRow.RequestId,
+		INSERT INTO "Jobs" 
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		pgRow.Id,
 		pgRow.ScheduledTimestamp,
 		pgRow.CreatedTimestamp,
 		nil,
 		j,
+		0,
+		pgRow.ParentJobId,
 	)
 
+	if err != nil {
+		log.
+			Err(err).
+			Msg("Failed to insert row")
+
+		return err
+	}
 	log.Info().
-		Str("id", data.RequestId).
+		Str("Id", data.Id).
 		Str("Url", data.RequestUrl).
 		Msg("Inserted new request")
-	return err
+
+	return nil
 }
 
 func (p *PgStorage) Complete(requestId string) error {
 	var _, err = p.db.Exec(
 		`
-		UPDATE "Requests" 
+		UPDATE "Jobs" 
 		SET "CompletedTimestamp" = $1 
-		WHERE "RequestId" = $2 `,
+		WHERE "Id" = $2 `,
 		time.Now(),
 		requestId,
 	)
+
+	if err != nil {
+		log.
+			Err(err).
+			Msg("Failed to update row")
+
+		return err
+	}
 
 	log.Info().
 		Str("requestId", requestId).

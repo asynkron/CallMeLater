@@ -76,14 +76,14 @@ func (w *worker) sendExpiredRequests() error {
 	for _, erd := range w.pending {
 		if erd.ScheduledTimestamp.Before(time.Now()) {
 			//delete the request from the DB.
-			err := w.storage.Complete(erd.RequestId)
+			err := w.storage.Complete(erd.Id)
 			if err != nil {
 				log.
 					Err(err).
 					Msg("Error deleting request")
 			}
 
-			go sendRequestResponse(erd)
+			go w.sendRequestResponse(erd)
 			w.pending = w.pending[1:]
 		} else {
 			break

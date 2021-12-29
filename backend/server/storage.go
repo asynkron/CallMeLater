@@ -23,7 +23,7 @@ func (n NoopStorage) Pull(int) ([]*RequestData, error) {
 func (n NoopStorage) Push(data *RequestData) error {
 	log.
 		Info().
-		Str("id", data.RequestId).
+		Str("id", data.Id).
 		Msg("NoopStorage.Push")
 
 	return nil
