@@ -30,15 +30,11 @@ func (w *worker) run() {
 	var err error
 	w.pending, err = w.storage.Pull(w.pullCount)
 	if err != nil {
-		log.
-			Err(err).
-			Msg("failed to get pending requests")
+		log.Err(err).Msg("failed to get pending requests")
 		return
 	}
 
-	log.
-		Info().
-		Msg("Consume loop started")
+	log.Info().Msg("Consume loop started")
 
 	for {
 		select {
@@ -46,16 +42,10 @@ func (w *worker) run() {
 
 			w.appendRequest(rd)
 
-			log.
-				Info().
-				Int("QueueLength", len(w.pending)).
-				Msg("Worker received new request")
+			log.Info().Int("QueueLength", len(w.pending)).Msg("Worker received new request")
 
 		case <-time.After(time.Second):
-			log.
-				Info().
-				Int("QueueLength", len(w.pending)).
-				Msg("Worker received no new messages")
+			log.Info().Int("QueueLength", len(w.pending)).Msg("Worker received no new messages")
 		}
 		_ = w.sendExpiredRequests()
 		_ = w.loadMoreRequests()
@@ -78,9 +68,7 @@ func (w *worker) sendExpiredRequests() error {
 			//delete the request from the DB.
 			err := w.storage.Complete(erd.Id)
 			if err != nil {
-				log.
-					Err(err).
-					Msg("Error deleting request")
+				log.Err(err).Msg("Error deleting request")
 			}
 
 			go w.sendRequestResponse(erd)
@@ -107,16 +95,12 @@ func (w *worker) loadMoreRequests() error {
 		return nil
 	}
 
-	log.
-		Info().
-		Msg("Loading more")
+	log.Info().Msg("Loading more")
 
 	pr, err := w.storage.Pull(w.pullCount)
 	if err != nil {
 		if err != nil {
-			log.
-				Err(err).
-				Msg("Error loading more")
+			log.Err(err).Msg("Error loading more")
 		}
 		return err
 	}

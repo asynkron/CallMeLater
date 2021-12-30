@@ -29,9 +29,7 @@ func (w *worker) sendRequestResponse(rd *RequestData) {
 	response, err := sendRequest(rd)
 
 	if err != nil {
-		log.
-			Err(err).
-			Msg("Error sending request")
+		log.Err(err).Msg("Error sending request")
 		return
 	}
 
@@ -42,10 +40,7 @@ func (w *worker) sendRequestResponse(rd *RequestData) {
 }
 
 func sendRequest(p *RequestData) (*RequestData, error) {
-	log.
-		Info().
-		Str("Url", p.RequestUrl).
-		Msg("Sending request")
+	log.Info().Str("Url", p.RequestUrl).Msg("Sending request")
 
 	var r io.Reader
 	request, err := http.NewRequest(p.RequestMethod, p.RequestUrl, r)

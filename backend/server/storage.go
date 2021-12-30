@@ -23,7 +23,7 @@ type JobResult struct {
 	Id                 string `gorm:"primaryKey"`
 	JobId              string
 	ExecutionTimestamp time.Time
-	status             string
+	Status             string
 	Data               string
 }
 
@@ -92,13 +92,9 @@ func NewStorage(dialector gorm.Dialector) *GormStorage {
 	if err != nil {
 		log.Err(err).Msg("failed to connect to database")
 	}
-	err = db.AutoMigrate(&Job{})
+	err = db.AutoMigrate(&Job{}, &JobResult{})
 	if err != nil {
-		log.Err(err).Msg("failed to migrate database for Job")
-	}
-	err = db.AutoMigrate(&JobResult{})
-	if err != nil {
-		log.Err(err).Msg("failed to migrate database for JobResult")
+		log.Err(err).Msg("failed to migrate database")
 	}
 	return q
 }

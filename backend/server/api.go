@@ -25,9 +25,7 @@ type apiServer struct {
 func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 	requestUrl, err := url.Parse(r.Header.Get(HeaderRequestUrl))
 	if err != nil {
-		log.
-			Err(err).
-			Msg("Failed to parse request url")
+		log.Err(err).Msg("Failed to parse request url")
 
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, "Failed to parse "+HeaderRequestUrl)
@@ -35,9 +33,7 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 	}
 	when, err := time.ParseDuration(r.Header.Get(HeaderWhen))
 	if err != nil {
-		log.
-			Err(err).
-			Msg("failed to parse when")
+		log.Err(err).Msg("failed to parse when")
 
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, "Failed to parse "+HeaderWhen)
@@ -48,9 +44,7 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 	if tmp != "" {
 		responseUrl, err := url.Parse(tmp)
 		if err != nil {
-			log.
-				Err(err).
-				Msg("failed to parse response url")
+			log.Err(err).Msg("failed to parse response url")
 
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprint(w, "Failed to parse "+HeaderResponseUrl)
@@ -79,21 +73,16 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 	fmt.Fprint(w, "OK")
-	log.Info().
-		Msg("Request accepted")
+	log.Info().Msg("Request accepted")
 }
 
 func (a *apiServer) saveRequest(rd *RequestData) {
 	err := a.worker.storage.Push(rd)
 	if err != nil {
-		log.
-			Err(err).
-			Msg("Error saving request")
+		log.Err(err).Msg("Error saving request")
 		return
 	}
-	log.
-		Info().
-		Msg("Saved Request")
+	log.Info().Msg("Saved Request")
 
 	a.worker.requests <- rd
 }
@@ -105,7 +94,5 @@ func handleRequests(worker *worker) {
 
 	http.HandleFunc("/later", a.handler)
 	err := http.ListenAndServe(":10000", nil)
-	log.
-		Err(err).
-		Msg("Error listening")
+	log.Err(err).Msg("Error listening")
 }
