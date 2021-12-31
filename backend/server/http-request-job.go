@@ -31,7 +31,7 @@ func (h *HttpRequestJob) GetId() string {
 	return h.Id
 }
 
-func (h *HttpRequestJob) Execute(storage JobStorage, pending chan Job) {
+func (h *HttpRequestJob) Execute(storage JobStorage, expired chan Job) {
 	response, err := sendRequest(h)
 
 	if err != nil {
@@ -42,9 +42,8 @@ func (h *HttpRequestJob) Execute(storage JobStorage, pending chan Job) {
 	if h.ResponseUrl != "" {
 		log.Info().Str("Id", response.Id).Str("Url", response.RequestUrl).Msg("Response Job created")
 		_ = storage.Push(response)
+		expired <- response
 	}
-
-	pending <- response
 }
 
 func sendRequest(job *HttpRequestJob) (*HttpRequestJob, error) {

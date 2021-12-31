@@ -84,7 +84,7 @@ func (a *apiServer) saveRequest(rd *HttpRequestJob) {
 	}
 	log.Info().Msg("Saved Request")
 
-	a.worker.requests <- rd
+	a.worker.expired <- rd
 }
 
 func handleRequests(worker *worker) {
