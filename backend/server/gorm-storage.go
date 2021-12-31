@@ -21,36 +21,45 @@ func (g GormStorage) Pull(count int) ([]Job, error) {
 
 	var requests []Job
 	for _, job := range jobs {
-		request := &HttpRequestJob{}
+		var unmarshalledJob Job
+
+		switch job.DataDiscriminator {
+		case httpRequest:
+			unmarshalledJob = &HttpRequestJob{}
+		case kafkaPublish:
+			//unmarshalledJob = &KafkaPublishJob{}
+		}
+
 		var d = []byte(job.Data)
-		err = json.Unmarshal(d, request)
+		err = json.Unmarshal(d, unmarshalledJob)
 		if err != nil {
 			log.Err(err).Msg("Failed to unmarshal row")
 
 			continue
 		}
-		requests = append(requests, request)
+		requests = append(requests, unmarshalledJob)
 	}
 
 	return requests, nil
 }
 
-func (g GormStorage) Push(data Job) error {
-	j, err := json.Marshal(data)
+func (g GormStorage) Push(job Job) error {
+	j, err := json.Marshal(job)
 	if err != nil {
-		log.Err(err).Msg("Failed to marshal data")
+		log.Err(err).Msg("Failed to marshal job")
 
 		return err
 	}
 
-	job := &JobEntity{
-		Id:                 data.GetId(),
-		ScheduledTimestamp: data.GetScheduledTimestamp(),
+	jobEntity := &JobEntity{
+		Id:                 job.GetId(),
+		ScheduledTimestamp: job.GetScheduledTimestamp(),
 		CreatedTimestamp:   time.Now(),
+		DataDiscriminator:  job.GetType(),
 		Data:               string(j),
 	}
 
-	g.db.Create(job)
+	g.db.Create(jobEntity)
 	return nil
 }
 

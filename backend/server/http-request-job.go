@@ -86,3 +86,7 @@ func sendRequest(job *HttpRequestJob) (*HttpRequestJob, error) {
 
 	return res, nil
 }
+
+func (h *HttpRequestJob) GetType() string {
+	return httpRequest
+}
