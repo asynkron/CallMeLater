@@ -1,7 +1,6 @@
 package server
 
 import (
-	"database/sql"
 	"encoding/json"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
@@ -12,9 +11,14 @@ type GormStorage struct {
 	db *gorm.DB
 }
 
+func (g GormStorage) Cancel(job Job) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (g GormStorage) Pull(count int) ([]Job, error) {
 	var jobs []JobEntity
-	err := g.db.Limit(count).Order("scheduled_timestamp asc").Find(&jobs, "completed_timestamp is null").Error
+	err := g.db.Limit(count).Order("scheduled_timestamp asc").Find(&jobs, "status = ?", Scheduled).Error
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +79,7 @@ func (g GormStorage) Complete(job Job) error {
 		return err
 	}
 
-	jobEntity.CompletedTimestamp = sql.NullTime{Time: time.Now(), Valid: true}
+	jobEntity.Status = CompletedSuccessfully
 	g.db.Save(jobEntity)
 
 	return nil
