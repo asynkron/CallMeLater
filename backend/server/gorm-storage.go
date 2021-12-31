@@ -21,15 +21,7 @@ func (g GormStorage) Pull(count int) ([]Job, error) {
 
 	var requests []Job
 	for _, job := range jobs {
-		var unmarshalledJob Job
-
-		switch job.DataDiscriminator {
-		case httpRequest:
-			unmarshalledJob = &HttpRequestJob{}
-		case kafkaPublish:
-			//unmarshalledJob = &KafkaPublishJob{}
-		}
-
+		var unmarshalledJob = instanceFromDiscriminator(job.DataDiscriminator)
 		var d = []byte(job.Data)
 		err = json.Unmarshal(d, unmarshalledJob)
 		if err != nil {
@@ -41,6 +33,18 @@ func (g GormStorage) Pull(count int) ([]Job, error) {
 	}
 
 	return requests, nil
+}
+
+func instanceFromDiscriminator(discriminator string) Job {
+	var unmarshalledJob Job
+
+	switch discriminator {
+	case httpRequest:
+		unmarshalledJob = &HttpRequestJob{}
+	case kafkaPublish:
+		//unmarshalledJob = &KafkaPublishJob{}
+	}
+	return unmarshalledJob
 }
 
 func (g GormStorage) Push(job Job) error {
