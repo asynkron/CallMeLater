@@ -57,7 +57,7 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 
 	t := time.Now().Add(when)
 
-	var p = &RequestData{
+	var p = &HttpRequestJob{
 		Id:                 uuid.New().String(),
 		RequestUrl:         requestUrl.String(),
 		RequestMethod:      r.Method,
@@ -76,7 +76,7 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("Request accepted")
 }
 
-func (a *apiServer) saveRequest(rd *RequestData) {
+func (a *apiServer) saveRequest(rd *HttpRequestJob) {
 	err := a.worker.storage.Push(rd)
 	if err != nil {
 		log.Err(err).Msg("Error saving request")

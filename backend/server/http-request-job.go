@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type RequestData struct {
+type HttpRequestJob struct {
 	Id                 string              `json:"request_id,omitempty"`
 	RequestMethod      string              `json:"request_method,omitempty"`
 	Header             map[string][]string `json:"header,omitempty"`
@@ -23,33 +23,41 @@ type RequestData struct {
 	ParentId           string              `json:"parent_id,omitempty"`
 }
 
-func (w *worker) sendRequestResponse(rd *RequestData) {
-	//if the request fails after this, it will be lost
+func (h *HttpRequestJob) GetScheduledTimestamp() time.Time {
+	return h.ScheduledTimestamp
+}
 
-	response, err := sendRequest(rd)
+func (h *HttpRequestJob) GetId() string {
+	return h.Id
+}
+
+func (h *HttpRequestJob) Execute(storage JobStorage, pending chan Job) {
+	response, err := sendRequest(h)
 
 	if err != nil {
 		log.Err(err).Msg("Error sending request")
 		return
 	}
 
-	if rd.ResponseUrl != "" {
-		_ = w.storage.Push(response)
-		w.requests <- response
+	if h.ResponseUrl != "" {
+		log.Info().Str("Id", response.Id).Str("Url", response.RequestUrl).Msg("Response Job created")
+		_ = storage.Push(response)
 	}
+
+	pending <- response
 }
 
-func sendRequest(p *RequestData) (*RequestData, error) {
-	log.Info().Str("Url", p.RequestUrl).Msg("Sending request")
+func sendRequest(job *HttpRequestJob) (*HttpRequestJob, error) {
+	log.Info().Str("Id", job.Id).Str("Url", job.RequestUrl).Msg("Sending request")
 
 	var r io.Reader
-	request, err := http.NewRequest(p.RequestMethod, p.RequestUrl, r)
+	request, err := http.NewRequest(job.RequestMethod, job.RequestUrl, r)
 	if err != nil {
 		return nil, err
 	}
-	request.Header = p.Header
-	request.Form = p.Form
-	request.Body = ioutil.NopCloser(bytes.NewReader(p.Body))
+	request.Header = job.Header
+	request.Form = job.Form
+	request.Body = ioutil.NopCloser(bytes.NewReader(job.Body))
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
@@ -61,14 +69,14 @@ func sendRequest(p *RequestData) (*RequestData, error) {
 		return nil, err
 	}
 
-	var res = &RequestData{
+	var res = &HttpRequestJob{
 		Id:                 uuid.New().String(),
 		Header:             response.Header,
 		Body:               body,
-		RequestUrl:         p.ResponseUrl,
-		RequestMethod:      p.ResponseMethod,
-		ScheduledTimestamp: p.ScheduledTimestamp,
-		ParentId:           p.Id,
+		RequestUrl:         job.ResponseUrl,
+		RequestMethod:      job.ResponseMethod,
+		ScheduledTimestamp: job.ScheduledTimestamp,
+		ParentId:           job.Id,
 	}
 
 	return res, nil
