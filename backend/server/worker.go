@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/rs/zerolog/log"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -39,16 +40,13 @@ func (w *worker) run() {
 	for {
 		select {
 		case rd := <-w.expired:
-
 			w.appendRequest(rd)
-
 			log.Info().Int("QueueLength", len(w.cache)).Msg("Worker received new request")
-
 		case <-time.After(time.Second):
 			log.Info().Int("QueueLength", len(w.cache)).Msg("Worker received no new messages")
 		}
 		_ = w.executeExpiredJobs()
-		_ = w.loadMoreRequests()
+		_ = w.fetchMore()
 	}
 }
 
@@ -63,20 +61,27 @@ func (w *worker) appendRequest(rd Job) {
 }
 
 func (w *worker) executeExpiredJobs() error {
+	var wg sync.WaitGroup
+
+	var count int
 	for _, job := range w.cache {
 		if job.GetScheduledTimestamp().Before(time.Now()) {
-			//delete the request from the DB.
-			err := w.storage.Complete(job)
-			if err != nil {
-				log.Err(err).Msg("Error completing request")
-			}
-
-			go job.Execute(w.storage, w.expired)
+			wg.Add(1)
+			go w.execute(job, &wg)
 			w.cache = w.cache[1:]
+			count++
 		} else {
 			break
 		}
 	}
+
+	if count == 0 {
+		return nil
+	}
+
+	log.Info().Msg("Waiting for jobs to finish")
+	wg.Wait()
+	log.Info().Msg("All jobs finished")
 
 	if len(w.cache) > 100 {
 		w.cache = w.cache[0:100]
@@ -86,7 +91,21 @@ func (w *worker) executeExpiredJobs() error {
 	return nil
 }
 
-func (w *worker) loadMoreRequests() error {
+func (w *worker) execute(job Job, wg *sync.WaitGroup) {
+	defer wg.Done()
+	log.Info().Str("Id", job.GetId()).Msg("Executing job")
+	err := job.Execute(w.storage, w.expired)
+	if err != nil {
+		log.Err(err).Msg("Error executing job")
+	}
+	log.Info().Str("Id", job.GetId()).Msg("Completed job")
+	err = w.storage.Complete(job)
+	if err != nil {
+		log.Err(err).Msg("Error completing job")
+	}
+}
+
+func (w *worker) fetchMore() error {
 	if len(w.cache) > 0 {
 		return nil
 	}

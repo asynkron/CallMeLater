@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -31,34 +32,39 @@ func (h *HttpRequestJob) GetId() string {
 	return h.Id
 }
 
-func (h *HttpRequestJob) Execute(storage JobStorage, expired chan Job) {
+func (h *HttpRequestJob) Execute(storage JobStorage, expired chan Job) error {
 	response, err := sendRequest(h)
 
 	if err != nil {
 		log.Err(err).Msg("Error sending request")
-		return
+		return err
 	}
 
 	if h.ResponseUrl != "" {
 		log.Info().Str("Id", response.Id).Str("Url", response.RequestUrl).Msg("Response Job created")
 		_ = storage.Push(response)
-		expired <- response
+		log.Info().Str("Id", response.Id).Str("Url", response.RequestUrl).Msg("Response Job stored")
+		go func() { expired <- response }()
 	}
+	return nil
 }
 
 func sendRequest(job *HttpRequestJob) (*HttpRequestJob, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+
 	log.Info().Str("Id", job.Id).Str("Url", job.RequestUrl).Msg("Sending request")
 
 	var r io.Reader
-	request, err := http.NewRequest(job.RequestMethod, job.RequestUrl, r)
+	request, err := http.NewRequestWithContext(ctx, job.RequestMethod, job.RequestUrl, r)
 	if err != nil {
 		return nil, err
 	}
 	request.Header = job.Header
 	request.Form = job.Form
 	request.Body = ioutil.NopCloser(bytes.NewReader(job.Body))
-	client := &http.Client{}
-	response, err := client.Do(request)
+
+	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return nil, err
 	}
