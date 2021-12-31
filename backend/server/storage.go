@@ -13,7 +13,7 @@ type JobStorage interface {
 }
 
 type JobEntity struct {
-	Id                 string    `gorm:"primaryKey"`
+	Id                 string    `gorm:"primaryKey;type:varchar"`
 	ScheduledTimestamp time.Time `gorm:"index"`
 	CreatedTimestamp   time.Time
 	CompletedTimestamp sql.NullTime `gorm:"index"`
@@ -21,7 +21,7 @@ type JobEntity struct {
 	Data               string
 	RetryCount         int
 	ParentJobId        string
-	Results            []JobResultEntity
+	Results            []JobResultEntity `gorm:"foreignKey:JobId"`
 }
 
 func (JobEntity) TableName() string {
@@ -29,8 +29,8 @@ func (JobEntity) TableName() string {
 }
 
 type JobResultEntity struct {
-	Id                 string `gorm:"primaryKey"`
-	JobEntityId        string
+	Id                 string `gorm:"primaryKey;type:varchar"`
+	JobId              string
 	ExecutionTimestamp time.Time
 	Status             string
 	DataDiscriminator  string
