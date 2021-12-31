@@ -17,10 +17,15 @@ type JobEntity struct {
 	ScheduledTimestamp time.Time `gorm:"index"`
 	CreatedTimestamp   time.Time
 	CompletedTimestamp sql.NullTime `gorm:"index"`
+	DataDiscriminator  string
 	Data               string
 	RetryCount         int
 	ParentJobId        string
 	Results            []JobResultEntity
+}
+
+func (JobEntity) TableName() string {
+	return "jobs"
 }
 
 type JobResultEntity struct {
@@ -28,5 +33,10 @@ type JobResultEntity struct {
 	JobEntityId        string
 	ExecutionTimestamp time.Time
 	Status             string
+	DataDiscriminator  string
 	Data               string
+}
+
+func (JobResultEntity) TableName() string {
+	return "job_results"
 }
