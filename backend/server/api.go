@@ -25,10 +25,10 @@ type apiServer struct {
 func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 	requestUrl, err := url.Parse(r.Header.Get(HeaderRequestUrl))
 	if err != nil {
-		log.Err(err).Msg("Failed to parse request url")
+		log.Err(err).Msg("JobStatusFailed to parse request url")
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "Failed to parse "+HeaderRequestUrl)
+		fmt.Fprint(w, "JobStatusFailed to parse "+HeaderRequestUrl)
 		return
 	}
 	when, err := time.ParseDuration(r.Header.Get(HeaderWhen))
@@ -36,7 +36,7 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 		log.Err(err).Msg("failed to parse when")
 
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "Failed to parse "+HeaderWhen)
+		fmt.Fprint(w, "JobStatusFailed to parse "+HeaderWhen)
 		return
 	}
 	tmp := r.Header.Get(HeaderResponseUrl)
@@ -47,7 +47,7 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 			log.Err(err).Msg("failed to parse response url")
 
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprint(w, "Failed to parse "+HeaderResponseUrl)
+			fmt.Fprint(w, "JobStatusFailed to parse "+HeaderResponseUrl)
 			return
 		}
 		responseUrlStr = responseUrl.String()

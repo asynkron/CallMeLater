@@ -12,13 +12,29 @@ type GormStorage struct {
 }
 
 func (g GormStorage) Cancel(job Job) error {
-	//TODO implement me
-	panic("implement me")
+	log.Info().Str("Id", job.GetId()).Msg("Cancelling Job")
+	jobEntity := &JobEntity{}
+	err := g.db.
+		Where("id = ?", job.GetId()).
+		First(jobEntity).Error
+
+	if err != nil {
+		return err
+	}
+
+	jobEntity.Status = JobStatusCancelled
+	g.db.Save(jobEntity)
+
+	return nil
 }
 
 func (g GormStorage) Pull(count int) ([]Job, error) {
 	var jobs []JobEntity
-	err := g.db.Limit(count).Order("scheduled_timestamp asc").Find(&jobs, "status = ?", Scheduled).Error
+	err := g.db.
+		Limit(count).
+		Order("scheduled_timestamp asc").
+		Find(&jobs, "status = ?", JobStatusScheduled).Error
+
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +45,7 @@ func (g GormStorage) Pull(count int) ([]Job, error) {
 		var d = []byte(job.Data)
 		err = json.Unmarshal(d, unmarshalledJob)
 		if err != nil {
-			log.Err(err).Msg("Failed to unmarshal row")
+			log.Err(err).Msg("JobStatusFailed to unmarshal row")
 
 			continue
 		}
@@ -54,7 +70,7 @@ func instanceFromDiscriminator(discriminator string) Job {
 func (g GormStorage) Push(job Job) error {
 	j, err := json.Marshal(job)
 	if err != nil {
-		log.Err(err).Msg("Failed to marshal job")
+		log.Err(err).Msg("JobStatusFailed to marshal job")
 
 		return err
 	}
@@ -74,12 +90,15 @@ func (g GormStorage) Push(job Job) error {
 func (g GormStorage) Complete(job Job) error {
 	log.Info().Str("Id", job.GetId()).Msg("Completing Job")
 	jobEntity := &JobEntity{}
-	err := g.db.Where("id = ?", job.GetId()).First(jobEntity).Error
+	err := g.db.
+		Where("id = ?", job.GetId()).
+		First(jobEntity).Error
+
 	if err != nil {
 		return err
 	}
 
-	jobEntity.Status = CompletedSuccessfully
+	jobEntity.Status = JobStatusCompletedSuccessfully
 	g.db.Save(jobEntity)
 
 	return nil

@@ -22,6 +22,7 @@ type HttpRequestJob struct {
 	ScheduledTimestamp time.Time           `json:"when"`
 	Body               []byte              `json:"body,omitempty"`
 	ParentId           string              `json:"parent_id,omitempty"`
+	RetryCount         int                 `json:"retry_count,omitempty"`
 }
 
 func (h *HttpRequestJob) GetScheduledTimestamp() time.Time {
