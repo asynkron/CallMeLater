@@ -80,9 +80,9 @@ func (w *worker) executeJobs() error {
 		return nil
 	}
 
-	log.Info().Msg("Waiting for executableJobs to finish")
+	log.Info().Msg("Worker waiting for jobs to finish")
 	wg.Wait()
-	log.Info().Msg("All executableJobs finished")
+	log.Info().Msg("Worker finished waiting for jobs")
 
 	if len(w.sortedJobs) > 100 {
 		w.sortedJobs = w.sortedJobs[0:100]
