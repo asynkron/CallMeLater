@@ -47,44 +47,59 @@ func (job *HttpRequestJob) GetId() string {
 }
 
 func (job *HttpRequestJob) Execute(storage JobStorage, expired chan Job) error {
-	response, err := sendRequest(job)
+	response, err := send(job)
 
 	if err != nil {
-		log.Err(err).Msg("Error sending request")
 		job.RetryCount++
 		if job.RetryCount > job.RetryMax {
-			err = storage.Fail(job)
-			if err != nil {
-				log.Err(err).Msg("Error marking job as failed")
-				return err
-			}
+			_ = job.fail(storage)
 		} else {
-			//todo: define backoff strategy
-			job.ScheduledTimestamp = job.ScheduledTimestamp.Add(time.Duration(job.RetryCount) * job.RetryDelay)
-			err = storage.Update(job)
-			if err != nil {
-				log.Err(err).Msg("Error updating job")
-				return err
-			}
-			scheduleJob(expired, job)
+			_ = job.retry(storage, expired)
 		}
 		return err
 	}
 
 	if job.ResponseUrl != "" {
-		log.Info().Str("Id", response.Id).Str("Url", response.RequestUrl).Msg("Response Job created")
-		_ = storage.Create(response)
-		log.Info().Str("Id", response.Id).Str("Url", response.RequestUrl).Msg("Response Job stored")
-		scheduleJob(expired, response)
+		job.respond(storage, expired, response)
 	}
 	return nil
 }
 
-func scheduleJob(expired chan Job, job *HttpRequestJob) {
+func (job *HttpRequestJob) respond(storage JobStorage, expired chan Job, response *HttpRequestJob) {
+	_ = storage.Create(response)
+	log.Info().Str("Id", response.Id).Str("Url", response.RequestUrl).Msg("Response Job created")
+	schedule(expired, response)
+}
+
+func (job *HttpRequestJob) retry(storage JobStorage, expired chan Job) error {
+	//todo: define backoff strategy
+
+	job.ScheduledTimestamp = job.ScheduledTimestamp.Add(time.Duration(job.RetryCount) * job.RetryDelay)
+	log.Warn().Str("Id", job.Id).Time("Scheduled", job.ScheduledTimestamp).Msg("Retrying job")
+	err := storage.Update(job)
+	if err != nil {
+		log.Err(err).Msg("Error updating job")
+		return err
+	}
+	schedule(expired, job)
+	return nil
+}
+
+func (job *HttpRequestJob) fail(storage JobStorage) error {
+	log.Warn().Str("Id", job.Id).Msg("Marking job as failed")
+	err := storage.Fail(job)
+	if err != nil {
+		log.Err(err).Msg("Error marking job as failed")
+		return err
+	}
+	return nil
+}
+
+func schedule(expired chan Job, job *HttpRequestJob) {
 	go func() { expired <- job }()
 }
 
-func sendRequest(job *HttpRequestJob) (*HttpRequestJob, error) {
+func send(job *HttpRequestJob) (*HttpRequestJob, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 

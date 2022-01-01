@@ -44,7 +44,7 @@ func (w *worker) run() {
 		}
 		if len(w.sortedJobs) > 0 {
 			first := w.sortedJobs[0]
-			log.Info().Time("NextExecution", first.GetScheduledTimestamp()).Msg("Next job to be executed")
+			log.Info().Time("Scheduled", first.GetScheduledTimestamp()).Msg("Next job to be executed")
 		}
 		_ = w.executeJobs()
 		_ = w.getMoreJobs()
@@ -97,7 +97,8 @@ func (w *worker) executeJob(job Job, wg *sync.WaitGroup) {
 	log.Info().Str("Id", job.GetId()).Msg("Executing job")
 	err := job.Execute(w.storage, w.executableJobs)
 	if err != nil {
-		log.Err(err).Msg("Error executing job")
+		log.Err(err).Str("Id", job.GetId()).Msg("Error executing job")
+		return
 	}
 	log.Info().Str("Id", job.GetId()).Msg("Completed job")
 	err = w.storage.Complete(job)

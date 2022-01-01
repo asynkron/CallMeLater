@@ -15,7 +15,7 @@ type JobEntity struct {
 }
 
 func (JobEntity) TableName() string {
-	return "executableJobs"
+	return "jobs"
 }
 
 type JobStatus int
