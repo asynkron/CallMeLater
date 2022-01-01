@@ -57,7 +57,7 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 
 	t := time.Now().Add(when)
 
-	var p = &HttpRequestJob{
+	var job = &HttpRequestJob{
 		Id:                 uuid.New().String(),
 		RequestUrl:         requestUrl.String(),
 		RequestMethod:      r.Method,
@@ -68,8 +68,9 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 		Form:               r.Form,
 		Body:               body,
 	}
+	job.InitDefaults()
 
-	a.saveRequest(p)
+	a.saveRequest(job)
 
 	w.WriteHeader(http.StatusAccepted)
 	fmt.Fprint(w, "OK")

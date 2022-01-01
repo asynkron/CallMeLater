@@ -24,6 +24,18 @@ type HttpRequestJob struct {
 	Body               []byte              `json:"body,omitempty"`
 	ParentId           string              `json:"parent_id,omitempty"`
 	RetryCount         int                 `json:"retry_count,omitempty"`
+	RetryMax           int                 `json:"retry_max,omitempty"`
+	RetryDelay         time.Duration       `json:"retry_delay,omitempty"`
+}
+
+func (job *HttpRequestJob) InitDefaults() {
+	if job.RetryMax == 0 {
+		job.RetryMax = 3
+	}
+
+	if job.RetryDelay == 0 {
+		job.RetryDelay = time.Minute * 1
+	}
 }
 
 func (job *HttpRequestJob) GetScheduledTimestamp() time.Time {
@@ -40,7 +52,7 @@ func (job *HttpRequestJob) Execute(storage JobStorage, expired chan Job) error {
 	if err != nil {
 		log.Err(err).Msg("Error sending request")
 		job.RetryCount++
-		if job.RetryCount > 10 {
+		if job.RetryCount > job.RetryMax {
 			err = storage.Fail(job)
 			if err != nil {
 				log.Err(err).Msg("Error marking job as failed")
@@ -48,7 +60,7 @@ func (job *HttpRequestJob) Execute(storage JobStorage, expired chan Job) error {
 			}
 		} else {
 			//todo: define backoff strategy
-			job.ScheduledTimestamp = job.ScheduledTimestamp.Add(time.Duration(job.RetryCount) * time.Second)
+			job.ScheduledTimestamp = job.ScheduledTimestamp.Add(time.Duration(job.RetryCount) * job.RetryDelay)
 			err = storage.Update(job)
 			if err != nil {
 				log.Err(err).Msg("Error updating job")
@@ -111,6 +123,7 @@ func sendRequest(job *HttpRequestJob) (*HttpRequestJob, error) {
 		ScheduledTimestamp: job.ScheduledTimestamp,
 		ParentId:           job.Id,
 	}
+	res.InitDefaults()
 
 	return res, nil
 }

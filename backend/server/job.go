@@ -12,4 +12,5 @@ type Job interface {
 	GetScheduledTimestamp() time.Time
 	GetId() string
 	GetType() string
+	InitDefaults()
 }
