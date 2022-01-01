@@ -28,6 +28,23 @@ func (g GormStorage) Cancel(job Job) error {
 	return nil
 }
 
+func (g GormStorage) Fail(job Job) error {
+	log.Info().Str("Id", job.GetId()).Msg("Cancelling Job")
+	jobEntity := &JobEntity{}
+	err := g.db.
+		Where("id = ?", job.GetId()).
+		First(jobEntity).Error
+
+	if err != nil {
+		return err
+	}
+
+	jobEntity.Status = JobStatusFailed
+	g.db.Save(jobEntity)
+
+	return nil
+}
+
 func (g GormStorage) Pull(count int) ([]Job, error) {
 	var jobs []JobEntity
 	err := g.db.
@@ -67,7 +84,7 @@ func instanceFromDiscriminator(discriminator string) Job {
 	return unmarshalledJob
 }
 
-func (g GormStorage) Push(job Job) error {
+func (g GormStorage) Create(job Job) error {
 	j, err := json.Marshal(job)
 	if err != nil {
 		log.Err(err).Msg("JobStatusFailed to marshal job")
@@ -84,6 +101,28 @@ func (g GormStorage) Push(job Job) error {
 	}
 
 	g.db.Create(jobEntity)
+
+	return nil
+}
+
+func (g GormStorage) Update(job Job) error {
+	j, err := json.Marshal(job)
+	if err != nil {
+		log.Err(err).Msg("JobStatusFailed to marshal job")
+
+		return err
+	}
+
+	jobEntity := &JobEntity{
+		Id:                 job.GetId(),
+		ScheduledTimestamp: job.GetScheduledTimestamp(),
+		CreatedTimestamp:   time.Now(),
+		DataDiscriminator:  job.GetType(),
+		Data:               string(j),
+	}
+
+	g.db.Save(jobEntity)
+
 	return nil
 }
 

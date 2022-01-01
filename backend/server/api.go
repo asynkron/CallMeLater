@@ -77,7 +77,7 @@ func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *apiServer) saveRequest(rd *HttpRequestJob) {
-	err := a.worker.storage.Push(rd)
+	err := a.worker.storage.Create(rd)
 	if err != nil {
 		log.Err(err).Msg("Error saving request")
 		return

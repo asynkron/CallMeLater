@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -25,29 +26,50 @@ type HttpRequestJob struct {
 	RetryCount         int                 `json:"retry_count,omitempty"`
 }
 
-func (h *HttpRequestJob) GetScheduledTimestamp() time.Time {
-	return h.ScheduledTimestamp
+func (job *HttpRequestJob) GetScheduledTimestamp() time.Time {
+	return job.ScheduledTimestamp
 }
 
-func (h *HttpRequestJob) GetId() string {
-	return h.Id
+func (job *HttpRequestJob) GetId() string {
+	return job.Id
 }
 
-func (h *HttpRequestJob) Execute(storage JobStorage, expired chan Job) error {
-	response, err := sendRequest(h)
+func (job *HttpRequestJob) Execute(storage JobStorage, expired chan Job) error {
+	response, err := sendRequest(job)
 
 	if err != nil {
 		log.Err(err).Msg("Error sending request")
+		job.RetryCount++
+		if job.RetryCount > 10 {
+			err = storage.Fail(job)
+			if err != nil {
+				log.Err(err).Msg("Error marking job as failed")
+				return err
+			}
+		} else {
+			//todo: define backoff strategy
+			job.ScheduledTimestamp = job.ScheduledTimestamp.Add(time.Duration(job.RetryCount) * time.Second)
+			err = storage.Update(job)
+			if err != nil {
+				log.Err(err).Msg("Error updating job")
+				return err
+			}
+			scheduleJob(expired, job)
+		}
 		return err
 	}
 
-	if h.ResponseUrl != "" {
+	if job.ResponseUrl != "" {
 		log.Info().Str("Id", response.Id).Str("Url", response.RequestUrl).Msg("Response Job created")
-		_ = storage.Push(response)
+		_ = storage.Create(response)
 		log.Info().Str("Id", response.Id).Str("Url", response.RequestUrl).Msg("Response Job stored")
-		go func() { expired <- response }()
+		scheduleJob(expired, response)
 	}
 	return nil
+}
+
+func scheduleJob(expired chan Job, job *HttpRequestJob) {
+	go func() { expired <- job }()
 }
 
 func sendRequest(job *HttpRequestJob) (*HttpRequestJob, error) {
@@ -69,6 +91,11 @@ func sendRequest(job *HttpRequestJob) (*HttpRequestJob, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if response.StatusCode < 200 || response.StatusCode > 299 {
+		return nil, fmt.Errorf("request failed with status code %d", response.StatusCode)
+	}
+
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -88,6 +115,6 @@ func sendRequest(job *HttpRequestJob) (*HttpRequestJob, error) {
 	return res, nil
 }
 
-func (h *HttpRequestJob) GetType() string {
+func (job *HttpRequestJob) GetType() string {
 	return httpRequest
 }
