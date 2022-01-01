@@ -8,30 +8,29 @@ import (
 )
 
 type worker struct {
-	storage   JobStorage
-	hasMore   bool
-	expired   chan Job
-	cache     []Job
-	pullCount int
+	storage        JobStorage
+	hasMore        bool
+	executableJobs chan Job
+	sortedJobs     []Job
+	pullCount      int
 }
 
 func New(storage JobStorage) *worker {
 	w := &worker{
-		storage:   storage,
-		expired:   make(chan Job),
-		pullCount: 100,
+		storage:        storage,
+		executableJobs: make(chan Job),
+		pullCount:      100,
 	}
 	go w.run()
 	handleRequests(w)
 	return w
 }
 
-// TODO: make this all less hacky
 func (w *worker) run() {
 	var err error
-	w.cache, err = w.storage.Pull(w.pullCount)
+	w.sortedJobs, err = w.storage.Pull(w.pullCount)
 	if err != nil {
-		log.Err(err).Msg("failed to get cache expired")
+		log.Err(err).Msg("failed to get sortedJobs executableJobs")
 		return
 	}
 
@@ -39,36 +38,38 @@ func (w *worker) run() {
 
 	for {
 		select {
-		case rd := <-w.expired:
-			w.appendRequest(rd)
-			log.Info().Int("QueueLength", len(w.cache)).Msg("Worker received new request")
+		case rd := <-w.executableJobs:
+			w.appendJob(rd)
 		case <-time.After(time.Second):
-			log.Info().Int("QueueLength", len(w.cache)).Msg("Worker received no new messages")
 		}
-		_ = w.executeExpiredJobs()
-		_ = w.fetchMore()
+		if len(w.sortedJobs) > 0 {
+			first := w.sortedJobs[0]
+			log.Info().Time("NextExecution", first.GetScheduledTimestamp()).Msg("Next job to be executed")
+		}
+		_ = w.executeJobs()
+		_ = w.getMoreJobs()
 	}
 }
 
-func (w *worker) appendRequest(rd Job) {
-	w.cache = append(w.cache, rd)
+func (w *worker) appendJob(rd Job) {
+	w.sortedJobs = append(w.sortedJobs, rd)
 
-	sort.Slice(w.cache, func(i, j int) bool {
-		w1 := w.cache[i].GetScheduledTimestamp()
-		w2 := w.cache[j].GetScheduledTimestamp()
+	sort.Slice(w.sortedJobs, func(i, j int) bool {
+		w1 := w.sortedJobs[i].GetScheduledTimestamp()
+		w2 := w.sortedJobs[j].GetScheduledTimestamp()
 		return w1.Before(w2)
 	})
 }
 
-func (w *worker) executeExpiredJobs() error {
+func (w *worker) executeJobs() error {
 	var wg sync.WaitGroup
 
 	var count int
-	for _, job := range w.cache {
+	for _, job := range w.sortedJobs {
 		if job.GetScheduledTimestamp().Before(time.Now()) {
 			wg.Add(1)
-			go w.execute(job, &wg)
-			w.cache = w.cache[1:]
+			go w.executeJob(job, &wg)
+			w.sortedJobs = w.sortedJobs[1:]
 			count++
 		} else {
 			break
@@ -79,22 +80,22 @@ func (w *worker) executeExpiredJobs() error {
 		return nil
 	}
 
-	log.Info().Msg("Waiting for jobs to finish")
+	log.Info().Msg("Waiting for executableJobs to finish")
 	wg.Wait()
-	log.Info().Msg("All jobs finished")
+	log.Info().Msg("All executableJobs finished")
 
-	if len(w.cache) > 100 {
-		w.cache = w.cache[0:100]
+	if len(w.sortedJobs) > 100 {
+		w.sortedJobs = w.sortedJobs[0:100]
 		w.hasMore = true
 	}
 
 	return nil
 }
 
-func (w *worker) execute(job Job, wg *sync.WaitGroup) {
+func (w *worker) executeJob(job Job, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Info().Str("Id", job.GetId()).Msg("Executing job")
-	err := job.Execute(w.storage, w.expired)
+	err := job.Execute(w.storage, w.executableJobs)
 	if err != nil {
 		log.Err(err).Msg("Error executing job")
 	}
@@ -105,8 +106,8 @@ func (w *worker) execute(job Job, wg *sync.WaitGroup) {
 	}
 }
 
-func (w *worker) fetchMore() error {
-	if len(w.cache) > 0 {
+func (w *worker) getMoreJobs() error {
+	if len(w.sortedJobs) > 0 {
 		return nil
 	}
 
@@ -123,7 +124,7 @@ func (w *worker) fetchMore() error {
 		}
 		return err
 	}
-	w.cache = pr
+	w.sortedJobs = pr
 	w.hasMore = len(pr) > 0
 	return nil
 }
