@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -27,13 +26,13 @@ func (a *apiServer) createJob(c *gin.Context) {
 	requestUrl, err := url.Parse(c.GetHeader(HeaderRequestUrl))
 	if err != nil {
 		log.Err(err).Msg("JobStatusFailed to parse request url")
-		_ = c.AbortWithError(http.StatusBadRequest, err)
+		c.String(http.StatusBadRequest, "JobStatusFailed to parse request url")
 		return
 	}
 	when, err := time.ParseDuration(c.GetHeader(HeaderWhen))
 	if err != nil {
 		log.Err(err).Msg("failed to parse when")
-		_ = c.AbortWithError(http.StatusBadRequest, err)
+		c.String(http.StatusBadRequest, "failed to parse when")
 		return
 	}
 	tmp := c.GetHeader(HeaderResponseUrl)
@@ -42,7 +41,7 @@ func (a *apiServer) createJob(c *gin.Context) {
 		responseUrl, err := url.Parse(tmp)
 		if err != nil {
 			log.Err(err).Msg("failed to parse response url")
-			_ = c.AbortWithError(http.StatusBadRequest, err)
+			c.String(http.StatusBadRequest, "failed to parse response url")
 			return
 		}
 		responseUrlStr = responseUrl.String()
@@ -67,7 +66,7 @@ func (a *apiServer) createJob(c *gin.Context) {
 
 	a.saveRequest(job)
 
-	c.SetAccepted()
+	c.String(http.StatusAccepted, "Job Created")
 
 	log.Info().Msg("Request accepted")
 }
@@ -83,12 +82,11 @@ func (a *apiServer) saveRequest(rd *HttpRequestJob) {
 	a.worker.executableJobs <- rd
 }
 
-func (a *apiServer) read(w http.ResponseWriter, r *http.Request) {
+func (a *apiServer) read(c *gin.Context) {
 	_, err := a.worker.storage.Read(0, 0)
 	if err != nil {
 		log.Err(err).Msg("Error reading requests")
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, "Error reading requests")
+		_ = c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 }
@@ -100,10 +98,6 @@ func handleRequests(worker *worker) {
 
 	r := gin.Default()
 	r.Any("/later", a.createJob)
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
+	r.GET("/jobs/:skip/:limit", a.read)
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
