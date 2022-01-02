@@ -97,6 +97,17 @@ func (w *worker) executeJob(job Job, wg *sync.WaitGroup) {
 	log.Info().Str("Id", job.GetId()).Msg("Executing job")
 	err := job.Execute(w.storage, w.executableJobs)
 	if err != nil {
+		log.Err(err).Str("Id", job.GetId()).Msg("Failed to execute job")
+		if job.ShouldRetry() {
+			log.Warn().Str("Id", job.GetId()).Time("Scheduled", job.GetScheduledTimestamp()).Msg("Retrying job")
+			_ = job.Retry(w.storage, w.executableJobs)
+		} else {
+			log.Warn().Str("Id", job.GetId()).Msg("Marking job as failed")
+			_ = job.Fail(w.storage, w.executableJobs)
+		}
+		return
+	}
+	if err != nil {
 		log.Err(err).Str("Id", job.GetId()).Msg("Error executing job")
 		return
 	}

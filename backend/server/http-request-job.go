@@ -28,6 +28,10 @@ type HttpRequestJob struct {
 	RetryDelay         time.Duration       `json:"retry_delay,omitempty"`
 }
 
+func (job *HttpRequestJob) ShouldRetry() bool {
+	return job.RetryCount < job.RetryMax
+}
+
 func (job *HttpRequestJob) InitDefaults() {
 	if job.RetryMax == 0 {
 		job.RetryMax = 3
@@ -50,12 +54,6 @@ func (job *HttpRequestJob) Execute(storage JobStorage, expired chan Job) error {
 	response, err := send(job)
 
 	if err != nil {
-		job.RetryCount++
-		if job.RetryCount > job.RetryMax {
-			_ = job.fail(storage)
-		} else {
-			_ = job.retry(storage, expired)
-		}
 		return err
 	}
 
@@ -71,11 +69,10 @@ func (job *HttpRequestJob) respond(storage JobStorage, expired chan Job, respons
 	schedule(expired, response)
 }
 
-func (job *HttpRequestJob) retry(storage JobStorage, expired chan Job) error {
+func (job *HttpRequestJob) Retry(storage JobStorage, expired chan Job) error {
 	//todo: define backoff strategy
-
+	job.RetryCount++
 	job.ScheduledTimestamp = job.ScheduledTimestamp.Add(time.Duration(job.RetryCount) * job.RetryDelay)
-	log.Warn().Str("Id", job.Id).Time("Scheduled", job.ScheduledTimestamp).Msg("Retrying job")
 	err := storage.Update(job)
 	if err != nil {
 		log.Err(err).Msg("Error updating job")
@@ -85,8 +82,7 @@ func (job *HttpRequestJob) retry(storage JobStorage, expired chan Job) error {
 	return nil
 }
 
-func (job *HttpRequestJob) fail(storage JobStorage) error {
-	log.Warn().Str("Id", job.Id).Msg("Marking job as failed")
+func (job *HttpRequestJob) Fail(storage JobStorage, expired chan Job) error {
 	err := storage.Fail(job)
 	if err != nil {
 		log.Err(err).Msg("Error marking job as failed")
