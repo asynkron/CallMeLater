@@ -93,7 +93,19 @@ func (a *apiServer) read(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "Error reading jobs")
 		return
 	}
-	c.JSON(http.StatusOK, jobs)
+	results := make([]*JobDto, 0)
+	for _, job := range jobs {
+		dto := &JobDto{
+			Id:                 job.Id,
+			ScheduledTimestamp: job.ScheduledTimestamp,
+			CreatedTimestamp:   job.CreatedTimestamp,
+			DataDiscriminator:  job.DataDiscriminator,
+			ParentJobId:        job.ParentJobId,
+			Status:             job.Status,
+		}
+		results = append(results, dto)
+	}
+	c.JSON(http.StatusOK, results)
 }
 
 func handleRequests(worker *worker) {

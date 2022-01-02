@@ -184,6 +184,7 @@ func (g GormStorage) Read(skip int, limit int) ([]JobEntity, error) {
 	var jobs []JobEntity
 
 	err := g.db.
+		Select("id, data_discriminator, status, scheduled_timestamp, created_timestamp").
 		Offset(skip).
 		Limit(limit).
 		Order("scheduled_timestamp asc").
