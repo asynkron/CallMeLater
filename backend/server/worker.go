@@ -44,7 +44,9 @@ func (w *worker) run() {
 		}
 		if len(w.sortedJobs) > 0 {
 			first := w.sortedJobs[0]
-			log.Info().Time("Scheduled", first.GetScheduledTimestamp()).Msg("Next job to be executed")
+			dur := first.GetScheduledTimestamp().Sub(time.Now()).String()
+
+			log.Info().Str("In", dur).Time("Scheduled", first.GetScheduledTimestamp()).Msg("Next job to be executed")
 		}
 		_ = w.executeJobs()
 		_ = w.getMoreJobs()
