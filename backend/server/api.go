@@ -22,7 +22,7 @@ type apiServer struct {
 	worker *worker
 }
 
-func (a *apiServer) handler(w http.ResponseWriter, r *http.Request) {
+func (a *apiServer) createJob(w http.ResponseWriter, r *http.Request) {
 	requestUrl, err := url.Parse(r.Header.Get(HeaderRequestUrl))
 	if err != nil {
 		log.Err(err).Msg("JobStatusFailed to parse request url")
@@ -88,12 +88,23 @@ func (a *apiServer) saveRequest(rd *HttpRequestJob) {
 	a.worker.executableJobs <- rd
 }
 
+func (a *apiServer) read(w http.ResponseWriter, r *http.Request) {
+	_, err := a.worker.storage.Read(0, 0)
+	if err != nil {
+		log.Err(err).Msg("Error reading requests")
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, "Error reading requests")
+		return
+	}
+}
+
 func handleRequests(worker *worker) {
 	a := &apiServer{
 		worker: worker,
 	}
 
-	http.HandleFunc("/later", a.handler)
+	http.HandleFunc("/later", a.createJob)
+	http.HandleFunc("/jobs", a.read)
 	err := http.ListenAndServe(":10000", nil)
 	log.Err(err).Msg("Error listening")
 }
