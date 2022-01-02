@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"time"
@@ -38,9 +39,24 @@ func (g GormStorage) Fail(job Job) error {
 	}
 
 	jobEntity.Status = JobStatusFailed
+
+	result := newJobResultEntity(jobEntity)
+	result.Status = "failed"
+	result.Data = "somejson"
+	jobEntity.Results = append(jobEntity.Results, result)
 	g.db.Save(jobEntity)
 
 	return nil
+}
+
+func newJobResultEntity(jobEntity *JobEntity) JobResultEntity {
+	result := JobResultEntity{
+		Id:                 uuid.New().String(),
+		JobId:              jobEntity.Id,
+		ExecutionTimestamp: jobEntity.ScheduledTimestamp,
+		DataDiscriminator:  jobEntity.DataDiscriminator,
+	}
+	return result
 }
 
 func (g GormStorage) Pull(count int) ([]Job, error) {
@@ -103,7 +119,7 @@ func (g GormStorage) Create(job Job) error {
 	return nil
 }
 
-func (g GormStorage) Update(job Job) error {
+func (g GormStorage) Retry(job Job) error {
 	j, err := json.Marshal(job)
 	if err != nil {
 		log.Err(err).Msg("Failed to marshal job")
@@ -118,6 +134,11 @@ func (g GormStorage) Update(job Job) error {
 		DataDiscriminator:  job.GetType(),
 		Data:               string(j),
 	}
+
+	result := newJobResultEntity(jobEntity)
+	result.Status = "retry"
+	result.Data = "somejson"
+	jobEntity.Results = append(jobEntity.Results, result)
 
 	g.db.Save(jobEntity)
 
@@ -135,6 +156,11 @@ func (g GormStorage) Complete(job Job) error {
 	}
 
 	jobEntity.Status = JobStatusCompletedSuccessfully
+	result := newJobResultEntity(jobEntity)
+	result.Status = "failed"
+	result.Data = "somejson"
+	jobEntity.Results = append(jobEntity.Results, result)
+
 	g.db.Save(jobEntity)
 
 	return nil

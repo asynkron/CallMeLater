@@ -5,7 +5,7 @@ type JobStorage interface {
 	Create(job Job) error
 	Complete(job Job) error
 	Cancel(job Job) error
-	Update(job Job) error
+	Retry(job Job) error
 	Fail(job Job) error
 	//GetResults(requestId string) ([]*JobResultEntity, error)
 }

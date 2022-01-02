@@ -73,7 +73,7 @@ func (job *HttpRequestJob) Retry(storage JobStorage, expired chan Job) error {
 	//todo: define backoff strategy
 	job.RetryCount++
 	job.ScheduledTimestamp = job.ScheduledTimestamp.Add(time.Duration(job.RetryCount) * job.RetryDelay)
-	err := storage.Update(job)
+	err := storage.Retry(job)
 	if err != nil {
 		log.Err(err).Msg("Error updating job")
 		return err
