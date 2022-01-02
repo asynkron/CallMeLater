@@ -96,24 +96,24 @@ func (w *worker) executeJobs() error {
 
 func (w *worker) executeJob(job Job, wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Info().Str("Id", job.GetId()).Msg("Executing job")
+	log.Info().Str("Job", job.DiagnosticsString()).Msg("Executing job")
 	err := job.Execute(w.storage, w.executableJobs)
 	if err != nil {
-		log.Err(err).Str("Id", job.GetId()).Msg("Failed to execute job")
+		log.Err(err).Str("Job", job.DiagnosticsString()).Msg("Failed to execute job")
 		if job.ShouldRetry() {
-			log.Warn().Str("Id", job.GetId()).Time("Scheduled", job.GetScheduledTimestamp()).Msg("Retrying job")
+			log.Warn().Str("Job", job.DiagnosticsString()).Time("Scheduled", job.GetScheduledTimestamp()).Msg("Retrying job")
 			_ = job.Retry(w.storage, w.executableJobs)
 		} else {
-			log.Warn().Str("Id", job.GetId()).Msg("Marking job as failed")
+			log.Warn().Str("Job", job.DiagnosticsString()).Msg("Marking job as failed")
 			_ = job.Fail(w.storage, w.executableJobs)
 		}
 		return
 	}
 	if err != nil {
-		log.Err(err).Str("Id", job.GetId()).Msg("Error executing job")
+		log.Err(err).Str("Job", job.DiagnosticsString()).Msg("Error executing job")
 		return
 	}
-	log.Info().Str("Id", job.GetId()).Msg("Completed job")
+	log.Info().Str("Job", job.DiagnosticsString()).Msg("Completed job")
 	err = w.storage.Complete(job)
 	if err != nil {
 		log.Err(err).Msg("Error completing job")

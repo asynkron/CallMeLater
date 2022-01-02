@@ -28,6 +28,10 @@ type HttpRequestJob struct {
 	RetryDelay         time.Duration       `json:"retry_delay,omitempty"`
 }
 
+func (job *HttpRequestJob) DiagnosticsString() string {
+	return job.Id + " " + job.RequestMethod + " " + job.RequestUrl
+}
+
 func (job *HttpRequestJob) ShouldRetry() bool {
 	return job.RetryCount < job.RetryMax
 }
@@ -65,27 +69,27 @@ func (job *HttpRequestJob) Execute(storage JobStorage, expired chan Job) error {
 
 func (job *HttpRequestJob) respond(storage JobStorage, expired chan Job, response *HttpRequestJob) {
 	_ = storage.Create(response)
-	log.Info().Str("Id", response.Id).Str("Url", response.RequestUrl).Msg("Response Job created")
+	log.Info().Str("Job", response.DiagnosticsString()).Msg("Response Job created")
 	schedule(expired, response)
 }
 
 func (job *HttpRequestJob) Retry(storage JobStorage, expired chan Job) error {
 	//todo: define backoff strategy
 	job.RetryCount++
-	job.ScheduledTimestamp = job.ScheduledTimestamp.Add(time.Duration(job.RetryCount) * job.RetryDelay)
+	job.ScheduledTimestamp = time.Now().Add(time.Duration(job.RetryCount) * job.RetryDelay)
 	err := storage.Retry(job)
 	if err != nil {
-		log.Err(err).Msg("Error updating job")
+		log.Err(err).Str("Job", job.DiagnosticsString()).Msg("Error updating job")
 		return err
 	}
 	schedule(expired, job)
 	return nil
 }
 
-func (job *HttpRequestJob) Fail(storage JobStorage, expired chan Job) error {
+func (job *HttpRequestJob) Fail(storage JobStorage, _ chan Job) error {
 	err := storage.Fail(job)
 	if err != nil {
-		log.Err(err).Msg("Error marking job as failed")
+		log.Err(err).Str("Job", job.DiagnosticsString()).Msg("Error marking job as failed")
 		return err
 	}
 	return nil
@@ -99,7 +103,7 @@ func send(job *HttpRequestJob) (*HttpRequestJob, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
-	log.Info().Str("Id", job.Id).Str("Url", job.RequestUrl).Msg("Sending request")
+	log.Info().Str("Job", job.DiagnosticsString()).Msg("Sending request")
 
 	var r io.Reader
 	request, err := http.NewRequestWithContext(ctx, job.RequestMethod, job.RequestUrl, r)

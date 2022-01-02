@@ -133,6 +133,7 @@ func (g GormStorage) Retry(job Job) error {
 		CreatedTimestamp:   time.Now(),
 		DataDiscriminator:  job.GetType(),
 		Data:               string(j),
+		Status:             JobStatusScheduled,
 	}
 
 	result := newJobResultEntity(jobEntity)

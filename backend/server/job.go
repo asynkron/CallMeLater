@@ -18,4 +18,6 @@ type Job interface {
 	GetId() string
 	GetType() string
 	InitDefaults()
+
+	DiagnosticsString() string
 }
