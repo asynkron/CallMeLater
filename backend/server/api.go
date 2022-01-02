@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -83,12 +84,16 @@ func (a *apiServer) saveRequest(rd *HttpRequestJob) {
 }
 
 func (a *apiServer) read(c *gin.Context) {
-	_, err := a.worker.storage.Read(0, 0)
+
+	skip, _ := strconv.Atoi(c.Query("limit"))
+	limit, _ := strconv.Atoi(c.Param("limit"))
+	jobs, err := a.worker.storage.Read(skip, limit)
 	if err != nil {
 		log.Err(err).Msg("Error reading requests")
-		_ = c.AbortWithError(http.StatusInternalServerError, err)
+		c.String(http.StatusInternalServerError, "Error reading jobs")
 		return
 	}
+	c.JSON(http.StatusOK, jobs)
 }
 
 func handleRequests(worker *worker) {
