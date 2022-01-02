@@ -8,4 +8,6 @@ type JobStorage interface {
 	Retry(job Job) error
 	Fail(job Job) error
 	//GetResults(requestId string) ([]*JobResultEntity, error)
+
+	Read(skip int, limit int) ([]JobEntity, error)
 }

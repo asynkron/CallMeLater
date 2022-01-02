@@ -179,3 +179,19 @@ func NewStorage(dialector gorm.Dialector) *GormStorage {
 	}
 	return q
 }
+
+func (g GormStorage) Read(skip int, limit int) ([]JobEntity, error) {
+	var jobs []JobEntity
+
+	err := g.db.
+		Offset(skip).
+		Limit(limit).
+		Order("scheduled_timestamp asc").
+		Find(&jobs).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return jobs, nil
+}
