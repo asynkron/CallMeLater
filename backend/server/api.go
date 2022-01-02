@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
@@ -22,58 +23,52 @@ type apiServer struct {
 	worker *worker
 }
 
-func (a *apiServer) createJob(w http.ResponseWriter, r *http.Request) {
-	requestUrl, err := url.Parse(r.Header.Get(HeaderRequestUrl))
+func (a *apiServer) createJob(c *gin.Context) {
+	requestUrl, err := url.Parse(c.GetHeader(HeaderRequestUrl))
 	if err != nil {
 		log.Err(err).Msg("JobStatusFailed to parse request url")
-
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "JobStatusFailed to parse "+HeaderRequestUrl)
+		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	when, err := time.ParseDuration(r.Header.Get(HeaderWhen))
+	when, err := time.ParseDuration(c.GetHeader(HeaderWhen))
 	if err != nil {
 		log.Err(err).Msg("failed to parse when")
-
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "JobStatusFailed to parse "+HeaderWhen)
+		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	tmp := r.Header.Get(HeaderResponseUrl)
+	tmp := c.GetHeader(HeaderResponseUrl)
 	var responseUrlStr string
 	if tmp != "" {
 		responseUrl, err := url.Parse(tmp)
 		if err != nil {
 			log.Err(err).Msg("failed to parse response url")
-
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprint(w, "JobStatusFailed to parse "+HeaderResponseUrl)
+			_ = c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		responseUrlStr = responseUrl.String()
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(c.Request.Body)
 
 	t := time.Now().Add(when)
 
 	var job = &HttpRequestJob{
 		Id:                 uuid.New().String(),
 		RequestUrl:         requestUrl.String(),
-		RequestMethod:      r.Method,
+		RequestMethod:      c.Request.Method,
 		ResponseUrl:        responseUrlStr,
-		ResponseMethod:     r.Header.Get(HeaderResponseMethod),
+		ResponseMethod:     c.GetHeader(HeaderResponseMethod),
 		ScheduledTimestamp: t,
-		Header:             r.Header,
-		Form:               r.Form,
+		Header:             c.Request.Header,
+		Form:               c.Request.Form,
 		Body:               body,
 	}
 	job.InitDefaults()
 
 	a.saveRequest(job)
 
-	w.WriteHeader(http.StatusAccepted)
-	fmt.Fprint(w, "OK")
+	c.SetAccepted()
+
 	log.Info().Msg("Request accepted")
 }
 
@@ -103,8 +98,12 @@ func handleRequests(worker *worker) {
 		worker: worker,
 	}
 
-	http.HandleFunc("/later", a.createJob)
-	http.HandleFunc("/jobs", a.read)
-	err := http.ListenAndServe(":10000", nil)
-	log.Err(err).Msg("Error listening")
+	r := gin.Default()
+	r.Any("/later", a.createJob)
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
+	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
