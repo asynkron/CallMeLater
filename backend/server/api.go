@@ -93,9 +93,14 @@ func (a *apiServer) read(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "Error reading jobs")
 		return
 	}
-	results := make([]*JobDto, 0)
+	response := GetJobsResponse{
+		Skip:  skip,
+		Limit: limit,
+	}
+	response.Jobs = make([]JobResponse, 0)
+
 	for _, job := range jobs {
-		dto := &JobDto{
+		jobResponse := JobResponse{
 			Id:                 job.Id,
 			ScheduledTimestamp: job.ScheduledTimestamp,
 			CreatedTimestamp:   job.CreatedTimestamp,
@@ -103,9 +108,9 @@ func (a *apiServer) read(c *gin.Context) {
 			ParentJobId:        job.ParentJobId,
 			Status:             job.Status,
 		}
-		results = append(results, dto)
+		response.Jobs = append(response.Jobs, jobResponse)
 	}
-	c.JSON(http.StatusOK, results)
+	c.JSON(http.StatusOK, response)
 }
 
 func handleRequests(worker *worker) {
