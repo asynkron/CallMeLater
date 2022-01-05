@@ -17,17 +17,29 @@
     </div>
   </q-page>
 </template>
-<script>
+<script lang="ts">
 
-class Job {
+import {onMounted, reactive} from "vue";
 
+interface Job {
+  id: string;
+  status: string;
+  url: string;
+  scheduledTimestamp: string;
+  createdTimestamp: string;
+  dataDiscriminator: string;
+  parentJobId: string;
+}
+
+interface State {
+  columns: any[];
+  rows: Job[];
 }
 
 export default {
   name: "ListJobs",
   setup() {
-
-    return {
+    let state: State = reactive({
       columns: [
         {name: 'Status', align: 'left', label: 'Status', field: 'status', sortable: true},
         {name: 'Id', align: 'left', label: 'Id', field: 'id', sortable: true},
@@ -36,30 +48,23 @@ export default {
         {name: 'Created at', align: 'left', label: 'Created at', field: 'createdTimestamp', sortable: true},
         {name: 'run', align: 'left', label: 'Run', field: '', sortable: true},
       ],
-      rows: [
-        {
-          status: "Future",
-          id: "1232",
-          url: "http://www.google.com",
-          scheduledTimestamp: "2021-12-12T12:12:12.000Z",
-          completed: false
-        },
-        {
-          status: "Retries: 3",
-          id: "4232",
-          url: "https://localhost:8080/api/v1/treats/1",
-          scheduledTimestamp: "2021-12-19T13:12:12.000Z",
-          completed: false
-        },
-        {
-          status: "Completed",
-          id: "534534",
-          url: "http://linkedin.com",
-          scheduledTimestamp: "2021-12-31T12:01:01.000Z",
-          completed: false
-        },
-      ],
-    };
+      rows: [],
+    });
+
+    async function getJobs(skip: number, limit: number) {
+      const response: any = await fetch(`http://localhost:8080/jobs/${skip}/${limit}`, {
+        method: 'get',
+        headers: {
+          'content-type': 'application/json'
+        }
+      });
+
+      state.rows = response.jobs
+    }
+
+    onMounted(async () => await getJobs(0, 20));
+
+    return state;
   }
 }
 </script>
