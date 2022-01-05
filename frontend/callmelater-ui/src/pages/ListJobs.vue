@@ -19,6 +19,7 @@
 </template>
 <script lang="ts">
 
+/* eslint-disable */
 import {onMounted, reactive} from "vue";
 
 interface Job {
