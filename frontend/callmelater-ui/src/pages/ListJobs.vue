@@ -53,14 +53,18 @@ export default {
     });
 
     async function getJobs(skip: number, limit: number) {
-      const response: any = await fetch(`http://localhost:8080/jobs/${skip}/${limit}`, {
+      const response = await fetch(`http://localhost:8080/jobs/${skip}/${limit}`, {
         method: 'get',
         headers: {
           'content-type': 'application/json'
         }
       });
 
-      state.rows = response.jobs
+      const json: any = await response.json();
+
+      console.log(response);
+
+      state.rows = json.jobs
     }
 
     onMounted(async () => await getJobs(0, 20));
