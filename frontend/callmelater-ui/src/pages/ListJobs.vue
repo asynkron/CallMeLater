@@ -101,10 +101,17 @@ export default {
       columns: [
         {name: 'expander', align: 'left', label: '', field: '', sortable: false},
         {name: 'status', align: 'left', label: 'Status', field: 'status', sortable: true},
+        {name: 'cronExpression', align: 'left', label: 'Cron', field: 'cronExpression', sortable: false},
         {name: 'id', align: 'left', label: 'Id', field: 'id', sortable: true},
         {name: 'description', align: 'left', label: 'Description', field: 'description', sortable: false},
-        {name: 'scheduledTimestamp', align: 'left', label: 'Scheduled at', field: 'scheduledTimestamp', sortable: true},
-        {name: 'executedTimestamp', align: 'left', label: 'Executed at', field: 'executedTimestamp', sortable: true},
+        {
+          name: 'scheduledTimestamp',
+          align: 'left',
+          label: 'Next execution',
+          field: 'scheduledTimestamp',
+          sortable: true
+        },
+        {name: 'executedTimestamp', align: 'left', label: 'Last execution', field: 'executedTimestamp', sortable: true},
       ],
       rows: [],
     });
