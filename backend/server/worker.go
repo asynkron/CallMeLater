@@ -1,10 +1,15 @@
 package server
 
 import (
+	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog/log"
 	"sort"
 	"sync"
 	"time"
+)
+
+var (
+	cronParser = cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
 )
 
 type worker struct {
@@ -109,11 +114,8 @@ func (w *worker) executeJob(job Job, wg *sync.WaitGroup) {
 		}
 		return
 	}
-	if err != nil {
-		log.Err(err).Str("Job", job.DiagnosticsString()).Msg("Error executing job")
-		return
-	}
 	log.Info().Str("Job", job.DiagnosticsString()).Msg("Completed job")
+
 	err = w.storage.Complete(job)
 	if err != nil {
 		log.Err(err).Msg("Error completing job")

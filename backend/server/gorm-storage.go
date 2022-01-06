@@ -126,11 +126,26 @@ func (g GormStorage) Retry(job Job) error {
 func (g GormStorage) Complete(job Job) error {
 	jobEntity := job.GetEntity()
 
-	jobEntity.Status = JobStatusCompletedSuccessfully
-	result := newJobResultEntity(jobEntity)
-	result.Status = "failed"
-	result.Data = "somejson"
-	jobEntity.Results = append(jobEntity.Results, result)
+	if jobEntity.CronExpression != "" {
+		log.Info().Str("Job", job.DiagnosticsString()).Msg("Scheduling next job")
+		res, err := cronParser.Parse(jobEntity.CronExpression)
+		if err != nil {
+			return err
+		}
+		next := res.Next(jobEntity.ScheduledTimestamp)
+		jobEntity.ScheduledTimestamp = next
+		jobEntity.Status = JobStatusScheduled
+		result := newJobResultEntity(jobEntity)
+		result.Status = "cron"
+		result.Data = "somejson"
+		jobEntity.Results = append(jobEntity.Results, result)
+	} else {
+		jobEntity.Status = JobStatusCompletedSuccessfully
+		result := newJobResultEntity(jobEntity)
+		result.Status = "completed"
+		result.Data = "somejson"
+		jobEntity.Results = append(jobEntity.Results, result)
+	}
 
 	g.db.Save(jobEntity)
 
