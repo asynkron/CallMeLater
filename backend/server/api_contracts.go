@@ -10,10 +10,13 @@ type GetJobsResponse struct {
 }
 
 type JobResponse struct {
-	Id                 string    `json:"id"`
-	ScheduledTimestamp time.Time `json:"scheduledTimestamp"`
-	CreatedTimestamp   time.Time `json:"createdTimestamp"`
-	DataDiscriminator  string    `json:"dataDiscriminator"`
-	ParentJobId        string    `json:"parentJobId"`
-	Status             JobStatus `json:"status"`
+	Id                 string          `json:"id"`
+	ScheduledTimestamp time.Time       `json:"scheduledTimestamp"`
+	Description        string          `json:"description"`
+	DataDiscriminator  string          `json:"dataDiscriminator"`
+	ParentJobId        string          `json:"parentJobId"`
+	Status             ScheduledStatus `json:"status"`
+	CronExpression     string          `json:"cronExpression"`
+	ExecutedTimestamp  time.Time       `json:"executedTimestamp"`
+	ExecutedStatus     ExecutedStatus  `json:"executedStatus"`
 }

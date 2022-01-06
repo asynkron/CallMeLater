@@ -104,7 +104,10 @@ func (a *apiServer) read(c *gin.Context) {
 		jobResponse := JobResponse{
 			Id:                 job.Id,
 			ScheduledTimestamp: job.ScheduledTimestamp,
-			CreatedTimestamp:   job.CreatedTimestamp,
+			ExecutedTimestamp:  job.ExecutedTimestamp,
+			ExecutedStatus:     job.ExecutedStatus,
+			Description:        job.Description,
+			CronExpression:     job.CronExpression,
 			DataDiscriminator:  job.DataDiscriminator,
 			ParentJobId:        job.ParentJobId,
 			Status:             job.Status,

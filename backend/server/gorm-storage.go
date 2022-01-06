@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
+	"time"
 )
 
 type GormStorage struct {
@@ -22,7 +23,8 @@ func (g GormStorage) Cancel(job Job) error {
 
 func (g GormStorage) Fail(job Job) error {
 	jobEntity := job.GetEntity()
-
+	jobEntity.ExecutedTimestamp = time.Now()
+	jobEntity.ExecutedStatus = ExecutedStatusFail
 	jobEntity.Status = JobStatusFailed
 
 	result := newJobResultEntity(jobEntity)
@@ -102,17 +104,10 @@ func (g GormStorage) Create(job Job) error {
 }
 
 func (g GormStorage) Retry(job Job) error {
-	j, err := json.Marshal(job)
-	if err != nil {
-		log.Err(err).Msg("Failed to marshal job")
-
-		return err
-	}
-
 	jobEntity := job.GetEntity()
-	jobEntity.Data = string(j)
+	jobEntity.ExecutedTimestamp = time.Now()
+	jobEntity.ExecutedStatus = ExecutedStatusFail
 	jobEntity.Status = JobStatusScheduled
-
 	result := newJobResultEntity(jobEntity)
 	result.Status = "retry"
 	result.Data = "somejson"
@@ -126,11 +121,15 @@ func (g GormStorage) Retry(job Job) error {
 func (g GormStorage) RescheduleCron(job Job) error {
 	jobEntity := job.GetEntity()
 
+	jobEntity.ExecutedTimestamp = time.Now()
+	jobEntity.ExecutedStatus = ExecutedStatusSuccess
+
 	log.Info().Str("Job", job.DiagnosticsString()).Msg("Scheduling next job")
 	res, err := cronParser.Parse(jobEntity.CronExpression)
 	if err != nil {
 		return err
 	}
+
 	next := res.Next(jobEntity.ScheduledTimestamp)
 	jobEntity.ScheduledTimestamp = next
 	jobEntity.Status = JobStatusScheduled
@@ -146,8 +145,10 @@ func (g GormStorage) RescheduleCron(job Job) error {
 
 func (g GormStorage) Complete(job Job) error {
 	jobEntity := job.GetEntity()
+	jobEntity.ExecutedTimestamp = time.Now()
+	jobEntity.ExecutedStatus = ExecutedStatusSuccess
 
-	jobEntity.Status = JobStatusCompletedSuccessfully
+	jobEntity.Status = JobStatusSuccess
 	result := newJobResultEntity(jobEntity)
 	result.Status = "completed"
 	result.Data = "somejson"
@@ -175,7 +176,7 @@ func (g GormStorage) Read(skip int, limit int) ([]JobEntity, error) {
 	var jobs []JobEntity
 
 	err := g.db.
-		Select("id, data_discriminator, status, scheduled_timestamp, created_timestamp").
+		//	Select("id, data_discriminator, status, scheduled_timestamp, created_timestamp, executed_timestamp, description").
 		Offset(skip).
 		Limit(limit).
 		Order("scheduled_timestamp asc").

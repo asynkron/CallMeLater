@@ -46,6 +46,10 @@ func (job *HttpRequestJob) InitDefaults() {
 	if job.RetryDelay == 0 {
 		job.RetryDelay = time.Minute * 1
 	}
+
+	if job.JobEntity.Description == "" {
+		job.JobEntity.Description = "HTTP " + job.RequestMethod + " " + job.RequestUrl
+	}
 }
 
 func (job *HttpRequestJob) GetScheduledTimestamp() time.Time {

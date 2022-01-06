@@ -22,20 +22,15 @@
           </q-td>
         </template>
 
-        <template v-slot:body-cell-createdTimestamp="props">
+        <template v-slot:body-cell-executedTimestamp="props">
           <q-td :props="props">
-            {{ formatDate(props.row.createdTimestamp) }}
+            {{ formatDate(props.row.executedTimestamp) }}
           </q-td>
         </template>
 
         <template v-slot:body-cell-expander="props">
           <q-td :props="props">
             <q-btn color="primary" icon="add" outline></q-btn>
-          </q-td>
-        </template>
-        <template v-slot:body-cell-run="props">
-          <q-td :props="props">
-            <q-btn color="primary">Run now</q-btn>
           </q-td>
         </template>
       </q-table>
@@ -107,10 +102,9 @@ export default {
         {name: 'expander', align: 'left', label: '', field: '', sortable: false},
         {name: 'status', align: 'left', label: 'Status', field: 'status', sortable: true},
         {name: 'id', align: 'left', label: 'Id', field: 'id', sortable: true},
-        {name: 'url', align: 'left', label: 'Url', field: 'url', sortable: true},
+        {name: 'description', align: 'left', label: 'Description', field: 'description', sortable: false},
         {name: 'scheduledTimestamp', align: 'left', label: 'Scheduled at', field: 'scheduledTimestamp', sortable: true},
-        {name: 'createdTimestamp', align: 'left', label: 'Created at', field: 'createdTimestamp', sortable: true},
-        {name: 'run', align: 'center', label: 'Run', field: '', sortable: false},
+        {name: 'executedTimestamp', align: 'left', label: 'Executed at', field: 'executedTimestamp', sortable: true},
       ],
       rows: [],
     });

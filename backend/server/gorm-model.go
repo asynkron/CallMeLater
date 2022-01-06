@@ -6,12 +6,15 @@ type JobEntity struct {
 	Id                 string            `gorm:"primaryKey;type:varchar"`
 	ScheduledTimestamp time.Time         `gorm:"index"`
 	CreatedTimestamp   time.Time         `gorm:""`
+	ExecutedTimestamp  time.Time         `gorm:""`
+	ExecutedStatus     ExecutedStatus    `gorm:""`
+	Description        string            `gorm:""`
 	DataDiscriminator  string            `gorm:""`
 	Data               string            `gorm:""`
 	RetryCount         int               `gorm:""`
 	ParentJobId        string            `gorm:""`
 	CronExpression     string            `gorm:""`
-	Status             JobStatus         `gorm:"index"`
+	Status             ScheduledStatus   `gorm:"index"`
 	Results            []JobResultEntity `gorm:"foreignKey:JobId"`
 }
 
@@ -19,13 +22,21 @@ func (JobEntity) TableName() string {
 	return "jobs"
 }
 
-type JobStatus int
+type ScheduledStatus int
 
 const (
-	JobStatusScheduled             JobStatus = 0
-	JobStatusCompletedSuccessfully           = 1
-	JobStatusCancelled                       = 2
-	JobStatusFailed                          = 3
+	JobStatusScheduled ScheduledStatus = 0
+	JobStatusSuccess                   = 1
+	JobStatusCancelled                 = 2
+	JobStatusFailed                    = 3
+)
+
+type ExecutedStatus int
+
+const (
+	ExecutedStatusPending ExecutedStatus = 0
+	ExecutedStatusFail                   = 1
+	ExecutedStatusSuccess                = 2
 )
 
 type JobResultEntity struct {
