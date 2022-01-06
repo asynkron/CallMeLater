@@ -2,7 +2,6 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"net/http"
@@ -60,12 +59,7 @@ func (a *apiServer) createJob(c *gin.Context) {
 		Header:         c.Request.Header,
 		Form:           c.Request.Form,
 		Body:           body,
-		JobEntity: &JobEntity{
-			Id:                 uuid.New().String(),
-			ScheduledTimestamp: t,
-			CreatedTimestamp:   time.Now(),
-			DataDiscriminator:  httpRequest,
-		},
+		JobEntity:      newHttpRequestJobEntity(t, ""),
 	}
 	job.InitDefaults()
 

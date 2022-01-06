@@ -136,15 +136,19 @@ func send(job *HttpRequestJob) (*HttpRequestJob, error) {
 		Body:          body,
 		RequestUrl:    job.ResponseUrl,
 		RequestMethod: job.ResponseMethod,
-		JobEntity: &JobEntity{
-			Id:                 uuid.New().String(),
-			ScheduledTimestamp: job.ScheduledTimestamp,
-			ParentJobId:        job.Id,
-			CreatedTimestamp:   time.Now(),
-			DataDiscriminator:  httpRequest,
-		},
+		JobEntity:     newHttpRequestJobEntity(job.ScheduledTimestamp, job.Id),
 	}
 	res.InitDefaults()
 
 	return res, nil
+}
+
+func newHttpRequestJobEntity(scheduledTimestamp time.Time, parentJobId string) *JobEntity {
+	return &JobEntity{
+		Id:                 uuid.New().String(),
+		ScheduledTimestamp: scheduledTimestamp,
+		ParentJobId:        parentJobId,
+		CreatedTimestamp:   time.Now(),
+		DataDiscriminator:  httpRequest,
+	}
 }
