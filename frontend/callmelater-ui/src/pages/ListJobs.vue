@@ -7,8 +7,6 @@
         row-key="name"
         title="Jobs"
       >
-
-
         <template v-slot:body-cell-status="props">
           <q-td :props="props">
             <q-chip :color="statusColor(props.row.status)" square text-color="white">

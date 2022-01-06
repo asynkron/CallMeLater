@@ -13,19 +13,21 @@ import (
 )
 
 type HttpRequestJob struct {
-	Id                 string              `json:"request_id,omitempty"`
-	RequestMethod      string              `json:"request_method,omitempty"`
-	Header             map[string][]string `json:"header,omitempty"`
-	Form               map[string][]string `json:"form,omitempty"`
-	RequestUrl         string              `json:"request_url,omitempty"`
-	ResponseUrl        string              `json:"response_url,omitempty"`
-	ResponseMethod     string              `json:"response_method,omitempty"`
-	ScheduledTimestamp time.Time           `json:"when"`
-	Body               []byte              `json:"body,omitempty"`
-	ParentId           string              `json:"parent_id,omitempty"`
-	RetryCount         int                 `json:"retry_count,omitempty"`
-	RetryMax           int                 `json:"retry_max,omitempty"`
-	RetryDelay         time.Duration       `json:"retry_delay,omitempty"`
+	*JobEntity
+	RequestMethod  string              `json:"request_method,omitempty"`
+	Header         map[string][]string `json:"header,omitempty"`
+	Form           map[string][]string `json:"form,omitempty"`
+	RequestUrl     string              `json:"request_url,omitempty"`
+	ResponseUrl    string              `json:"response_url,omitempty"`
+	ResponseMethod string              `json:"response_method,omitempty"`
+	Body           []byte              `json:"body,omitempty"`
+	RetryCount     int                 `json:"retry_count,omitempty"`
+	RetryMax       int                 `json:"retry_max,omitempty"`
+	RetryDelay     time.Duration       `json:"retry_delay,omitempty"`
+}
+
+func (job *HttpRequestJob) GetEntity() *JobEntity {
+	return job.JobEntity
 }
 
 func (job *HttpRequestJob) DiagnosticsString() string {
@@ -130,19 +132,19 @@ func send(job *HttpRequestJob) (*HttpRequestJob, error) {
 	}
 
 	var res = &HttpRequestJob{
-		Id:                 uuid.New().String(),
-		Header:             response.Header,
-		Body:               body,
-		RequestUrl:         job.ResponseUrl,
-		RequestMethod:      job.ResponseMethod,
-		ScheduledTimestamp: job.ScheduledTimestamp,
-		ParentId:           job.Id,
+		Header:        response.Header,
+		Body:          body,
+		RequestUrl:    job.ResponseUrl,
+		RequestMethod: job.ResponseMethod,
+		JobEntity: &JobEntity{
+			Id:                 uuid.New().String(),
+			ScheduledTimestamp: job.ScheduledTimestamp,
+			ParentJobId:        job.Id,
+			CreatedTimestamp:   time.Now(),
+			DataDiscriminator:  httpRequest,
+		},
 	}
 	res.InitDefaults()
 
 	return res, nil
-}
-
-func (job *HttpRequestJob) GetType() string {
-	return httpRequest
 }

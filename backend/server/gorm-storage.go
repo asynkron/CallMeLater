@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
-	"time"
 )
 
 type GormStorage struct {
@@ -13,14 +12,7 @@ type GormStorage struct {
 }
 
 func (g GormStorage) Cancel(job Job) error {
-	jobEntity := &JobEntity{}
-	err := g.db.
-		Where("id = ?", job.GetId()).
-		First(jobEntity).Error
-
-	if err != nil {
-		return err
-	}
+	jobEntity := job.GetEntity()
 
 	jobEntity.Status = JobStatusCancelled
 	g.db.Save(jobEntity)
@@ -29,14 +21,7 @@ func (g GormStorage) Cancel(job Job) error {
 }
 
 func (g GormStorage) Fail(job Job) error {
-	jobEntity := &JobEntity{}
-	err := g.db.
-		Where("id = ?", job.GetId()).
-		First(jobEntity).Error
-
-	if err != nil {
-		return err
-	}
+	jobEntity := job.GetEntity()
 
 	jobEntity.Status = JobStatusFailed
 
@@ -72,7 +57,7 @@ func (g GormStorage) Pull(count int) ([]Job, error) {
 
 	var requests []Job
 	for _, job := range jobs {
-		var unmarshalledJob = instanceFromDiscriminator(job.DataDiscriminator)
+		var unmarshalledJob = instanceFromDiscriminator(job)
 		var d = []byte(job.Data)
 		err = json.Unmarshal(d, unmarshalledJob)
 		if err != nil {
@@ -86,12 +71,14 @@ func (g GormStorage) Pull(count int) ([]Job, error) {
 	return requests, nil
 }
 
-func instanceFromDiscriminator(discriminator string) Job {
+func instanceFromDiscriminator(job JobEntity) Job {
 	var unmarshalledJob Job
 
-	switch discriminator {
+	switch job.DataDiscriminator {
 	case httpRequest:
-		unmarshalledJob = &HttpRequestJob{}
+		unmarshalledJob = &HttpRequestJob{
+			JobEntity: &job,
+		}
 	case kafkaPublish:
 		//unmarshalledJob = &KafkaPublishJob{}
 	}
@@ -106,13 +93,8 @@ func (g GormStorage) Create(job Job) error {
 		return err
 	}
 
-	jobEntity := &JobEntity{
-		Id:                 job.GetId(),
-		ScheduledTimestamp: job.GetScheduledTimestamp(),
-		CreatedTimestamp:   time.Now(),
-		DataDiscriminator:  job.GetType(),
-		Data:               string(j),
-	}
+	jobEntity := job.GetEntity()
+	jobEntity.Data = string(j)
 
 	g.db.Create(jobEntity)
 
@@ -127,14 +109,9 @@ func (g GormStorage) Retry(job Job) error {
 		return err
 	}
 
-	jobEntity := &JobEntity{
-		Id:                 job.GetId(),
-		ScheduledTimestamp: job.GetScheduledTimestamp(),
-		CreatedTimestamp:   time.Now(),
-		DataDiscriminator:  job.GetType(),
-		Data:               string(j),
-		Status:             JobStatusScheduled,
-	}
+	jobEntity := job.GetEntity()
+	jobEntity.Data = string(j)
+	jobEntity.Status = JobStatusScheduled
 
 	result := newJobResultEntity(jobEntity)
 	result.Status = "retry"
@@ -147,14 +124,7 @@ func (g GormStorage) Retry(job Job) error {
 }
 
 func (g GormStorage) Complete(job Job) error {
-	jobEntity := &JobEntity{}
-	err := g.db.
-		Where("id = ?", job.GetId()).
-		First(jobEntity).Error
-
-	if err != nil {
-		return err
-	}
+	jobEntity := job.GetEntity()
 
 	jobEntity.Status = JobStatusCompletedSuccessfully
 	result := newJobResultEntity(jobEntity)

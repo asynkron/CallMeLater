@@ -10,6 +10,7 @@ type JobEntity struct {
 	Data               string            `gorm:""`
 	RetryCount         int               `gorm:""`
 	ParentJobId        string            `gorm:""`
+	CronExpression     string            `gorm:""`
 	Status             JobStatus         `gorm:"index"`
 	Results            []JobResultEntity `gorm:"foreignKey:JobId"`
 }

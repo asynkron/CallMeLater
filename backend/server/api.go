@@ -53,15 +53,19 @@ func (a *apiServer) createJob(c *gin.Context) {
 	t := time.Now().Add(when)
 
 	var job = &HttpRequestJob{
-		Id:                 uuid.New().String(),
-		RequestUrl:         requestUrl.String(),
-		RequestMethod:      c.Request.Method,
-		ResponseUrl:        responseUrlStr,
-		ResponseMethod:     c.GetHeader(HeaderResponseMethod),
-		ScheduledTimestamp: t,
-		Header:             c.Request.Header,
-		Form:               c.Request.Form,
-		Body:               body,
+		RequestUrl:     requestUrl.String(),
+		RequestMethod:  c.Request.Method,
+		ResponseUrl:    responseUrlStr,
+		ResponseMethod: c.GetHeader(HeaderResponseMethod),
+		Header:         c.Request.Header,
+		Form:           c.Request.Form,
+		Body:           body,
+		JobEntity: &JobEntity{
+			Id:                 uuid.New().String(),
+			ScheduledTimestamp: t,
+			CreatedTimestamp:   time.Now(),
+			DataDiscriminator:  httpRequest,
+		},
 	}
 	job.InitDefaults()
 
