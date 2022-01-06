@@ -12,9 +12,13 @@ type GormStorage struct {
 	db *gorm.DB
 }
 
+var (
+	zeroTime = time.Time{}
+)
+
 func (g GormStorage) Cancel(job Job) error {
 	jobEntity := job.GetEntity()
-
+	jobEntity.ScheduledTimestamp = zeroTime
 	jobEntity.Status = JobStatusCancelled
 	g.db.Save(jobEntity)
 
@@ -24,6 +28,7 @@ func (g GormStorage) Cancel(job Job) error {
 func (g GormStorage) Fail(job Job) error {
 	jobEntity := job.GetEntity()
 	jobEntity.ExecutedTimestamp = time.Now()
+	jobEntity.ScheduledTimestamp = zeroTime
 	jobEntity.ExecutedStatus = ExecutedStatusFail
 	jobEntity.Status = JobStatusFailed
 
@@ -108,6 +113,7 @@ func (g GormStorage) Retry(job Job) error {
 	jobEntity.ExecutedTimestamp = time.Now()
 	jobEntity.ExecutedStatus = ExecutedStatusFail
 	jobEntity.Status = JobStatusScheduled
+	jobEntity.RetryCount++
 	result := newJobResultEntity(jobEntity)
 	result.Status = "retry"
 	result.Data = "somejson"
@@ -146,6 +152,7 @@ func (g GormStorage) RescheduleCron(job Job) error {
 func (g GormStorage) Complete(job Job) error {
 	jobEntity := job.GetEntity()
 	jobEntity.ExecutedTimestamp = time.Now()
+	jobEntity.ScheduledTimestamp = zeroTime
 	jobEntity.ExecutedStatus = ExecutedStatusSuccess
 
 	jobEntity.Status = JobStatusSuccess

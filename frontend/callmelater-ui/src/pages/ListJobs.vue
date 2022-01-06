@@ -7,14 +7,7 @@
         row-key="name"
         title="Jobs"
       >
-        <template v-slot:body-cell-status="props">
-          <q-td :props="props">
-            <q-chip :color="statusColor(props.row.status)" square text-color="white">
-              {{ status(props.row.status) }}
-            </q-chip>
 
-          </q-td>
-        </template>
 
         <template v-slot:body-cell-scheduledTimestamp="props">
           <q-td :props="props">
@@ -24,7 +17,9 @@
 
         <template v-slot:body-cell-executedTimestamp="props">
           <q-td :props="props">
-            {{ formatDate(props.row.executedTimestamp) }}
+            <q-chip :color="statusColor(props.row.executedStatus)" square text-color="white">
+              {{ formatDate(props.row.executedTimestamp) }}
+            </q-chip>
           </q-td>
         </template>
 
@@ -55,7 +50,6 @@ interface Job {
 
 interface State {
   formatDate: Function;
-  status: Function;
   statusColor: Function;
   columns: any[];
   rows: Job[];
@@ -67,40 +61,27 @@ export default {
     let state: State = reactive({
       formatDate: function (value: string) {
         if (value) {
-          return moment(String(value)).format('YYYY-MM-DD hh:mm:ss')
-        }
-      },
-      status: function (value: number) {
-        switch (value) {
-          case 0:
-            return "Scheduled";
-          case 1:
-            return "Succeeded";
-          case 2:
-            return "Cancelled";
-          case 3:
-            return "Failed";
-          default:
-            return "Unknown";
+          const m = moment(String(value));
+          if (m.year() < 2020) {
+            return "";
+          }
+          return m.format('YYYY-MM-DD hh:mm:ss')
         }
       },
       statusColor: function (value: number) {
         switch (value) {
           case 0:
-            return "blue";
-          case 1:
-            return "green";
-          case 2:
             return "gray";
-          case 3:
+          case 1:
             return "red";
+          case 2:
+            return "green";
           default:
             return "Unknown";
         }
       },
       columns: [
         {name: 'expander', align: 'left', label: '', field: '', sortable: false},
-        {name: 'status', align: 'left', label: 'Status', field: 'status', sortable: true},
         {name: 'cronExpression', align: 'left', label: 'Cron', field: 'cronExpression', sortable: false},
         {name: 'id', align: 'left', label: 'Id', field: 'id', sortable: true},
         {name: 'description', align: 'left', label: 'Description', field: 'description', sortable: false},
