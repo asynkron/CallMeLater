@@ -12,10 +12,10 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          Call Me Later
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <div>blabla</div>
       </q-toolbar>
     </q-header>
 

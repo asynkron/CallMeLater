@@ -8,6 +8,16 @@
         title="Jobs"
       >
 
+
+        <template v-slot:body-cell-status="props">
+          <q-td :props="props">
+            <q-chip :color="statusColor(props.row.status)" square text-color="white">
+              {{ status(props.row.status) }}
+            </q-chip>
+
+          </q-td>
+        </template>
+
         <template v-slot:body-cell-scheduledTimestamp="props">
           <q-td :props="props">
             {{ formatDate(props.row.scheduledTimestamp) }}
@@ -20,10 +30,14 @@
           </q-td>
         </template>
 
+        <template v-slot:body-cell-expander="props">
+          <q-td :props="props">
+            <q-btn color="primary" icon="add" outline></q-btn>
+          </q-td>
+        </template>
         <template v-slot:body-cell-run="props">
           <q-td :props="props">
-            <q-btn color="blue" dense>Run now</q-btn>
-            <q-btn color="grey" dense>Logs</q-btn>
+            <q-btn color="primary">Run now</q-btn>
           </q-td>
         </template>
       </q-table>
@@ -48,6 +62,8 @@ interface Job {
 
 interface State {
   formatDate: Function;
+  status: Function;
+  statusColor: Function;
   columns: any[];
   rows: Job[];
 }
@@ -61,13 +77,42 @@ export default {
           return moment(String(value)).format('YYYY-MM-DD hh:mm:ss')
         }
       },
+      status: function (value: number) {
+        switch (value) {
+          case 0:
+            return "Scheduled";
+          case 1:
+            return "Succeeded";
+          case 2:
+            return "Cancelled";
+          case 3:
+            return "Failed";
+          default:
+            return "Unknown";
+        }
+      },
+      statusColor: function (value: number) {
+        switch (value) {
+          case 0:
+            return "blue";
+          case 1:
+            return "green";
+          case 2:
+            return "gray";
+          case 3:
+            return "red";
+          default:
+            return "Unknown";
+        }
+      },
       columns: [
-        {name: 'Status', align: 'left', label: 'Status', field: 'status', sortable: true},
-        {name: 'Id', align: 'left', label: 'Id', field: 'id', sortable: true},
-        {name: 'Url', align: 'left', label: 'Url', field: 'url', sortable: true},
+        {name: 'expander', align: 'left', label: '', field: '', sortable: false},
+        {name: 'status', align: 'left', label: 'Status', field: 'status', sortable: true},
+        {name: 'id', align: 'left', label: 'Id', field: 'id', sortable: true},
+        {name: 'url', align: 'left', label: 'Url', field: 'url', sortable: true},
         {name: 'scheduledTimestamp', align: 'left', label: 'Scheduled at', field: 'scheduledTimestamp', sortable: true},
         {name: 'createdTimestamp', align: 'left', label: 'Created at', field: 'createdTimestamp', sortable: true},
-        {name: 'run', align: 'left', label: 'Run', field: '', sortable: true},
+        {name: 'run', align: 'center', label: 'Run', field: '', sortable: false},
       ],
       rows: [],
     });
