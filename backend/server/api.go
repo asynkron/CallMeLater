@@ -14,6 +14,7 @@ const (
 	HeaderPrefix         = "X-Later-"
 	HeaderRequestUrl     = HeaderPrefix + "Request-Url"
 	HeaderWhen           = HeaderPrefix + "When"
+	HeaderCron           = HeaderPrefix + "Cron"
 	HeaderResponseUrl    = HeaderPrefix + "Response-Url"
 	HeaderResponseMethod = HeaderPrefix + "Response-Method"
 )
@@ -35,6 +36,7 @@ func (a *apiServer) createJob(c *gin.Context) {
 		c.String(http.StatusBadRequest, "failed to parse when")
 		return
 	}
+
 	tmp := c.GetHeader(HeaderResponseUrl)
 	var responseUrlStr string
 	if tmp != "" {
@@ -61,6 +63,7 @@ func (a *apiServer) createJob(c *gin.Context) {
 		Body:           body,
 		JobEntity:      newHttpRequestJobEntity(t, ""),
 	}
+	job.CronExpression = c.GetHeader(HeaderCron)
 	job.InitDefaults()
 
 	a.saveRequest(job)
