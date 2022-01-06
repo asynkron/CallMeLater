@@ -123,29 +123,35 @@ func (g GormStorage) Retry(job Job) error {
 	return nil
 }
 
+func (g GormStorage) RescheduleCron(job Job) error {
+	jobEntity := job.GetEntity()
+
+	log.Info().Str("Job", job.DiagnosticsString()).Msg("Scheduling next job")
+	res, err := cronParser.Parse(jobEntity.CronExpression)
+	if err != nil {
+		return err
+	}
+	next := res.Next(jobEntity.ScheduledTimestamp)
+	jobEntity.ScheduledTimestamp = next
+	jobEntity.Status = JobStatusScheduled
+	result := newJobResultEntity(jobEntity)
+	result.Status = "cron"
+	result.Data = "somejson"
+	jobEntity.Results = append(jobEntity.Results, result)
+
+	g.db.Save(jobEntity)
+
+	return nil
+}
+
 func (g GormStorage) Complete(job Job) error {
 	jobEntity := job.GetEntity()
 
-	if jobEntity.CronExpression != "" {
-		log.Info().Str("Job", job.DiagnosticsString()).Msg("Scheduling next job")
-		res, err := cronParser.Parse(jobEntity.CronExpression)
-		if err != nil {
-			return err
-		}
-		next := res.Next(jobEntity.ScheduledTimestamp)
-		jobEntity.ScheduledTimestamp = next
-		jobEntity.Status = JobStatusScheduled
-		result := newJobResultEntity(jobEntity)
-		result.Status = "cron"
-		result.Data = "somejson"
-		jobEntity.Results = append(jobEntity.Results, result)
-	} else {
-		jobEntity.Status = JobStatusCompletedSuccessfully
-		result := newJobResultEntity(jobEntity)
-		result.Status = "completed"
-		result.Data = "somejson"
-		jobEntity.Results = append(jobEntity.Results, result)
-	}
+	jobEntity.Status = JobStatusCompletedSuccessfully
+	result := newJobResultEntity(jobEntity)
+	result.Status = "completed"
+	result.Data = "somejson"
+	jobEntity.Results = append(jobEntity.Results, result)
 
 	g.db.Save(jobEntity)
 

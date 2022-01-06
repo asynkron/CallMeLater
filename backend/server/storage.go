@@ -3,6 +3,7 @@ package server
 type JobStorage interface {
 	Pull(count int) ([]Job, error)
 	Create(job Job) error
+	RescheduleCron(job Job) error
 	Complete(job Job) error
 	Cancel(job Job) error
 	Retry(job Job) error
