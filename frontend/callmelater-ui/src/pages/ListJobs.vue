@@ -8,6 +8,14 @@
         title="Jobs"
         :rows-per-page-options="[0]"
       >
+        <template v-slot:body-cell-id="props">
+          <q-td key="link" :props="props">
+            <div class="row justify-center">
+              <div style="width:80px;text-overflow: ellipsis;overflow:hidden">{{ props.row.id }}</div>
+            </div>
+          </q-td>
+        </template>
+
         <template v-slot:body-cell-scheduledTimestamp="props">
           <q-td :props="props">
             {{ formatDate(props.row.scheduledTimestamp) }}
@@ -22,11 +30,6 @@
           </q-td>
         </template>
 
-        <template v-slot:body-cell-expander="props">
-          <q-td :props="props">
-            <q-btn color="primary" icon="add" outline></q-btn>
-          </q-td>
-        </template>
       </q-table>
     </div>
   </q-page>
@@ -91,6 +94,14 @@ function formatDate(value: string) {
     if (m.year() < 2020) {
       return "";
     }
+
+    const now = moment.now()
+    const diff = now - m.valueOf();
+    if (diff < 1000 * 60 * 60) {
+      return m.fromNow();
+    }
+
+
     return m.format('YYYY-MM-DD hh:mm:ss')
   }
 }
@@ -98,11 +109,11 @@ function formatDate(value: string) {
 function statusColor(value: number) {
   switch (value) {
     case 0:
-      return "gray";
+      return "white";
     case 1:
-      return "red";
+      return "negative";
     case 2:
-      return "green";
+      return "positive";
     default:
       return "Unknown";
   }
@@ -110,7 +121,6 @@ function statusColor(value: number) {
 
 function columns() {
   return [
-    {name: 'expander', align: 'left', label: '', field: '', sortable: false},
     {name: 'id', align: 'left', label: 'Id', field: 'id', sortable: true},
     {name: 'cronExpression', align: 'left', label: 'Cron', field: 'cronExpression', sortable: false},
     {name: 'description', align: 'left', label: 'Description', field: 'description', sortable: false},
