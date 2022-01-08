@@ -91,16 +91,15 @@ export default {
 function formatDate(value: string) {
   if (value) {
     const m = moment(String(value));
+
+    //hack null time
     if (m.year() < 2020) {
       return "";
     }
 
-    const now = moment.now()
-    const diff = now - m.valueOf();
-    if (diff < 1000 * 60 * 60) {
+    if (moment.now() - m.valueOf() < 1000 * 60 * 60) {
       return m.fromNow();
     }
-
 
     return m.format('YYYY-MM-DD hh:mm:ss')
   }
