@@ -111,8 +111,8 @@ function statusColor(value: number) {
 function columns() {
   return [
     {name: 'expander', align: 'left', label: '', field: '', sortable: false},
-    {name: 'cronExpression', align: 'left', label: 'Cron', field: 'cronExpression', sortable: false},
     {name: 'id', align: 'left', label: 'Id', field: 'id', sortable: true},
+    {name: 'cronExpression', align: 'left', label: 'Cron', field: 'cronExpression', sortable: false},
     {name: 'description', align: 'left', label: 'Description', field: 'description', sortable: false},
     {name: 'scheduledTimestamp', align: 'left', label: 'Next execution', field: 'scheduledTimestamp', sortable: true},
     {name: 'executedTimestamp', align: 'left', label: 'Last execution', field: 'executedTimestamp', sortable: true},
