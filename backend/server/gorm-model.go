@@ -21,21 +21,13 @@ func (JobEntity) TableName() string {
 	return "jobs"
 }
 
-type ScheduleStatus int
-
-const (
-	JobStatusScheduled ScheduleStatus = 0
-	JobStatusSuccess                  = 1
-	JobStatusCancelled                = 2
-	JobStatusFailed                   = 3
-)
-
 type ExecutedStatus int
 
 const (
 	ExecutedStatusPending ExecutedStatus = 0
-	ExecutedStatusFail                   = 1
-	ExecutedStatusSuccess                = 2
+	ExecutedStatusSuccess                = 1
+	ExecutedStatusFail                   = 2
+	ExecutedStatusRetry                  = 3
 )
 
 type JobResultEntity struct {

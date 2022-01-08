@@ -16,15 +16,18 @@
           </q-td>
         </template>
 
-        <template v-slot:body-cell-scheduledTimestamp="props">
+        <template v-slot:body-cell-scheduleTimestamp="props">
           <q-td :props="props">
-            {{ formatDate(props.row.scheduledTimestamp) }}
+            {{ formatDate(props.row.scheduleTimestamp) }}
           </q-td>
         </template>
 
         <template v-slot:body-cell-executedTimestamp="props">
           <q-td :props="props">
-            <q-chip :color="statusColor(props.row.executedStatus)" square text-color="white">
+            <q-chip
+              :color="statusColor(props.row.executedStatus)"
+              :icon="statusIcon(props.row.executedStatus)"
+              square text-color="white">
               {{ formatDate(props.row.executedTimestamp) }}
             </q-chip>
           </q-td>
@@ -53,6 +56,7 @@ interface Job {
 interface State {
   formatDate: Function;
   statusColor: Function;
+  statusIcon: Function;
   columns: any[];
   rows: Job[];
 }
@@ -63,6 +67,7 @@ export default {
     let state: State = reactive({
       formatDate: formatDate,
       statusColor: statusColor,
+      statusIcon: statusIcon,
       columns: columns(),
       rows: [],
     });
@@ -108,11 +113,28 @@ function formatDate(value: string) {
 function statusColor(value: number) {
   switch (value) {
     case 0:
-      return "white";
+      return "";
     case 1:
-      return "negative";
-    case 2:
       return "positive";
+    case 2:
+      return "negative";
+    case 3:
+      return "deep-orange";
+    default:
+      return "Unknown";
+  }
+}
+
+function statusIcon(value: number) {
+  switch (value) {
+    case 0:
+      return "";
+    case 1:
+      return "check_circle_outline";
+    case 2:
+      return "error_outline";
+    case 3:
+      return "warning_amber";
     default:
       return "Unknown";
   }
@@ -121,11 +143,11 @@ function statusColor(value: number) {
 function columns() {
   return [
     {name: 'id', align: 'left', label: 'Id', field: 'id', sortable: true},
-    {name: 'cronExpression', align: 'left', label: 'Cron', field: 'cronExpression', sortable: false},
+    {name: 'scheduleCronExpression', align: 'left', label: 'Cron', field: 'scheduleCronExpression', sortable: false},
     {name: 'description', align: 'left', label: 'Description', field: 'description', sortable: false},
-    {name: 'scheduledTimestamp', align: 'left', label: 'Next execution', field: 'scheduledTimestamp', sortable: true},
+    {name: 'scheduleTimestamp', align: 'left', label: 'Next execution', field: 'scheduleTimestamp', sortable: true},
     {name: 'executedTimestamp', align: 'left', label: 'Last execution', field: 'executedTimestamp', sortable: true},
-    {name: 'retryCount', align: 'right', label: 'Retries', field: 'retryCount', sortable: true},
+    {name: 'executedCount', align: 'right', label: 'Retries', field: 'executedCount', sortable: true},
   ];
 }
 </script>

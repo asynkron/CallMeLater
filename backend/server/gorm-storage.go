@@ -114,7 +114,7 @@ func (g GormStorage) Create(job Job) error {
 func (g GormStorage) Retry(job Job) error {
 	jobEntity := job.GetEntity()
 	jobEntity.ExecutedTimestamp = timeToPtr(time.Now())
-	jobEntity.ExecutedStatus = ExecutedStatusFail
+	jobEntity.ExecutedStatus = ExecutedStatusRetry
 	jobEntity.ExecutedCount++
 	result := newJobResultEntity(jobEntity)
 	result.Status = "retry"
