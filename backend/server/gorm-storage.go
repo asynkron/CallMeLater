@@ -18,7 +18,7 @@ var (
 
 func (g GormStorage) Cancel(job Job) error {
 	jobEntity := job.GetEntity()
-	jobEntity.ScheduleTimestamp = zeroTime
+	jobEntity.ScheduleTimestamp = nil
 	jobEntity.ScheduleStatus = JobStatusCancelled
 	g.db.Save(jobEntity)
 
@@ -27,8 +27,8 @@ func (g GormStorage) Cancel(job Job) error {
 
 func (g GormStorage) Fail(job Job) error {
 	jobEntity := job.GetEntity()
-	jobEntity.ExecutedTimestamp = time.Now()
-	jobEntity.ScheduleTimestamp = zeroTime
+	jobEntity.ExecutedTimestamp = timeToPtr(time.Now())
+	jobEntity.ScheduleTimestamp = nil
 	jobEntity.ExecutedStatus = ExecutedStatusFail
 	jobEntity.ScheduleStatus = JobStatusFailed
 
@@ -119,7 +119,7 @@ func (g GormStorage) Create(job Job) error {
 
 func (g GormStorage) Retry(job Job) error {
 	jobEntity := job.GetEntity()
-	jobEntity.ExecutedTimestamp = time.Now()
+	jobEntity.ExecutedTimestamp = timeToPtr(time.Now())
 	jobEntity.ExecutedStatus = ExecutedStatusFail
 	jobEntity.ScheduleStatus = JobStatusScheduled
 	jobEntity.ExecutedCount++
@@ -140,7 +140,7 @@ func (g GormStorage) Retry(job Job) error {
 func (g GormStorage) RescheduleCron(job Job) error {
 	jobEntity := job.GetEntity()
 
-	jobEntity.ExecutedTimestamp = time.Now()
+	jobEntity.ExecutedTimestamp = timeToPtr(time.Now())
 	jobEntity.ExecutedStatus = ExecutedStatusSuccess
 
 	log.Info().Str("Job", job.DiagnosticsString()).Msg("Scheduling next job")
@@ -149,8 +149,8 @@ func (g GormStorage) RescheduleCron(job Job) error {
 		return err
 	}
 
-	next := res.Next(jobEntity.ScheduleTimestamp)
-	jobEntity.ScheduleTimestamp = next
+	next := res.Next(*jobEntity.ScheduleTimestamp)
+	jobEntity.ScheduleTimestamp = &next
 	jobEntity.ScheduleStatus = JobStatusScheduled
 	result := newJobResultEntity(jobEntity)
 	result.Status = "cron"
@@ -168,8 +168,8 @@ func (g GormStorage) RescheduleCron(job Job) error {
 
 func (g GormStorage) Complete(job Job) error {
 	jobEntity := job.GetEntity()
-	jobEntity.ExecutedTimestamp = time.Now()
-	jobEntity.ScheduleTimestamp = zeroTime
+	jobEntity.ExecutedTimestamp = timeToPtr(time.Now())
+	jobEntity.ScheduleTimestamp = nil
 	jobEntity.ExecutedStatus = ExecutedStatusSuccess
 
 	jobEntity.ScheduleStatus = JobStatusSuccess
@@ -215,4 +215,8 @@ func (g GormStorage) Read(skip int, limit int) ([]JobEntity, error) {
 	}
 
 	return jobs, nil
+}
+
+func timeToPtr(t time.Time) *time.Time {
+	return &t
 }

@@ -13,11 +13,11 @@ type JobResponse struct {
 	Id                     string         `json:"id"`
 	ParentJobId            string         `json:"parentJobId"`
 	Description            string         `json:"description"`
-	ScheduleTimestamp      time.Time      `json:"scheduleTimestamp"`
+	ScheduleTimestamp      *time.Time     `json:"scheduleTimestamp"`
 	ScheduleStatus         ScheduleStatus `json:"scheduleStatus"`
 	ScheduleCronExpression string         `json:"scheduleCronExpression"`
 	DataDiscriminator      string         `json:"dataDiscriminator"`
-	ExecutedTimestamp      time.Time      `json:"executedTimestamp"`
+	ExecutedTimestamp      *time.Time     `json:"executedTimestamp"`
 	ExecutedStatus         ExecutedStatus `json:"executedStatus"`
 	ExecutedCount          int            `json:"executedCount"`
 }

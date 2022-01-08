@@ -7,10 +7,10 @@ type JobEntity struct {
 	ParentJobId            string            `gorm:""`
 	CreatedTimestamp       time.Time         `gorm:""`
 	Description            string            `gorm:""`
-	ScheduleTimestamp      time.Time         `gorm:"index"`
+	ScheduleTimestamp      *time.Time        `gorm:"index"`
 	ScheduleStatus         ScheduleStatus    `gorm:"index"`
 	ScheduleCronExpression string            `gorm:""`
-	ExecutedTimestamp      time.Time         `gorm:""`
+	ExecutedTimestamp      *time.Time        `gorm:""`
 	ExecutedStatus         ExecutedStatus    `gorm:""`
 	ExecutedCount          int               `gorm:""`
 	DataDiscriminator      string            `gorm:""`
@@ -40,12 +40,12 @@ const (
 )
 
 type JobResultEntity struct {
-	Id                 string    `gorm:"primaryKey;type:varchar"`
-	JobId              string    `gorm:""`
-	ExecutionTimestamp time.Time `gorm:""`
-	Status             string    `gorm:""`
-	DataDiscriminator  string    `gorm:""`
-	Data               string    `gorm:""`
+	Id                 string     `gorm:"primaryKey;type:varchar"`
+	JobId              string     `gorm:""`
+	ExecutionTimestamp *time.Time `gorm:""`
+	Status             string     `gorm:""`
+	DataDiscriminator  string     `gorm:""`
+	Data               string     `gorm:""`
 }
 
 func (JobResultEntity) TableName() string {

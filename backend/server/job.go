@@ -14,7 +14,7 @@ type Job interface {
 
 	ShouldRetry() bool
 
-	GetScheduledTimestamp() time.Time
+	GetScheduledTimestamp() *time.Time
 	GetId() string
 	InitDefaults()
 	GetEntity() *JobEntity

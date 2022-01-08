@@ -51,7 +51,7 @@ func (a *apiServer) createJob(c *gin.Context) {
 
 	body, err := ioutil.ReadAll(c.Request.Body)
 
-	t := time.Now().Add(when)
+	t := timeToPtr(time.Now().Add(when))
 
 	var job = &HttpRequestJob{
 		RequestUrl:     requestUrl.String(),

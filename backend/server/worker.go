@@ -51,7 +51,7 @@ func (w *worker) run() {
 			first := w.sortedJobs[0]
 			dur := first.GetScheduledTimestamp().Sub(time.Now()).String()
 
-			log.Info().Str("In", dur).Time("Scheduled", first.GetScheduledTimestamp()).Msg("Next job to be executed")
+			log.Info().Str("In", dur).Time("Scheduled", *first.GetScheduledTimestamp()).Msg("Next job to be executed")
 		}
 		_ = w.executeJobs()
 		_ = w.getMoreJobs()
@@ -64,7 +64,7 @@ func (w *worker) appendJob(rd Job) {
 	sort.Slice(w.sortedJobs, func(i, j int) bool {
 		w1 := w.sortedJobs[i].GetScheduledTimestamp()
 		w2 := w.sortedJobs[j].GetScheduledTimestamp()
-		return w1.Before(w2)
+		return w1.Before(*w2)
 	})
 }
 
@@ -106,7 +106,7 @@ func (w *worker) executeJob(job Job, wg *sync.WaitGroup) {
 	if err != nil {
 		log.Err(err).Str("Job", job.DiagnosticsString()).Msg("Failed to execute job")
 		if job.ShouldRetry() {
-			log.Warn().Str("Job", job.DiagnosticsString()).Time("Scheduled", job.GetScheduledTimestamp()).Msg("Retrying job")
+			log.Warn().Str("Job", job.DiagnosticsString()).Time("Scheduled", *job.GetScheduledTimestamp()).Msg("Retrying job")
 			_ = job.Retry(w.storage, w.executableJobs)
 		} else {
 			log.Warn().Str("Job", job.DiagnosticsString()).Msg("Marking job as failed")
