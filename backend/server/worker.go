@@ -116,7 +116,7 @@ func (w *worker) executeJob(job Job, wg *sync.WaitGroup) {
 	}
 	log.Info().Str("Job", job.DiagnosticsString()).Msg("Completed job")
 
-	if job.GetEntity().CronExpression != "" {
+	if job.GetEntity().ScheduleCronExpression != "" {
 		err = w.storage.RescheduleCron(job)
 		if err != nil {
 			log.Err(err).Msg("Error rescheduling cron job")

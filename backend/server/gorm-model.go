@@ -3,32 +3,32 @@ package server
 import "time"
 
 type JobEntity struct {
-	Id                 string            `gorm:"primaryKey;type:varchar"`
-	ScheduledTimestamp time.Time         `gorm:"index"`
-	CreatedTimestamp   time.Time         `gorm:""`
-	ExecutedTimestamp  time.Time         `gorm:""`
-	ExecutedStatus     ExecutedStatus    `gorm:""`
-	Description        string            `gorm:""`
-	DataDiscriminator  string            `gorm:""`
-	Data               string            `gorm:""`
-	RetryCount         int               `gorm:""`
-	ParentJobId        string            `gorm:""`
-	CronExpression     string            `gorm:""`
-	Status             ScheduledStatus   `gorm:"index"`
-	Results            []JobResultEntity `gorm:"foreignKey:JobId"`
+	Id                     string            `gorm:"primaryKey;type:varchar"`
+	ParentJobId            string            `gorm:""`
+	CreatedTimestamp       time.Time         `gorm:""`
+	Description            string            `gorm:""`
+	ScheduleTimestamp      time.Time         `gorm:"index"`
+	ScheduleStatus         ScheduleStatus    `gorm:"index"`
+	ScheduleCronExpression string            `gorm:""`
+	ExecutedTimestamp      time.Time         `gorm:""`
+	ExecutedStatus         ExecutedStatus    `gorm:""`
+	ExecutedCount          int               `gorm:""`
+	DataDiscriminator      string            `gorm:""`
+	Data                   string            `gorm:""`
+	Results                []JobResultEntity `gorm:"foreignKey:JobId"`
 }
 
 func (JobEntity) TableName() string {
 	return "jobs"
 }
 
-type ScheduledStatus int
+type ScheduleStatus int
 
 const (
-	JobStatusScheduled ScheduledStatus = 0
-	JobStatusSuccess                   = 1
-	JobStatusCancelled                 = 2
-	JobStatusFailed                    = 3
+	JobStatusScheduled ScheduleStatus = 0
+	JobStatusSuccess                  = 1
+	JobStatusCancelled                = 2
+	JobStatusFailed                   = 3
 )
 
 type ExecutedStatus int

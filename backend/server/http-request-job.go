@@ -53,7 +53,7 @@ func (job *HttpRequestJob) InitDefaults() {
 }
 
 func (job *HttpRequestJob) GetScheduledTimestamp() time.Time {
-	return job.ScheduledTimestamp
+	return job.ScheduleTimestamp
 }
 
 func (job *HttpRequestJob) GetId() string {
@@ -82,7 +82,7 @@ func (job *HttpRequestJob) respond(storage JobStorage, expired chan Job, respons
 func (job *HttpRequestJob) Retry(storage JobStorage, expired chan Job) error {
 	//todo: define backoff strategy
 	job.RetryCount++
-	job.ScheduledTimestamp = time.Now().Add(time.Duration(job.RetryCount) * job.RetryDelay)
+	job.ScheduleTimestamp = time.Now().Add(time.Duration(job.RetryCount) * job.RetryDelay)
 	err := storage.Retry(job)
 	if err != nil {
 		log.Err(err).Str("Job", job.DiagnosticsString()).Msg("Error updating job")
@@ -140,7 +140,7 @@ func send(job *HttpRequestJob) (*HttpRequestJob, error) {
 		Body:          body,
 		RequestUrl:    job.ResponseUrl,
 		RequestMethod: job.ResponseMethod,
-		JobEntity:     newHttpRequestJobEntity(job.ScheduledTimestamp, job.Id),
+		JobEntity:     newHttpRequestJobEntity(job.ScheduleTimestamp, job.Id),
 	}
 	res.InitDefaults()
 
@@ -149,10 +149,10 @@ func send(job *HttpRequestJob) (*HttpRequestJob, error) {
 
 func newHttpRequestJobEntity(scheduledTimestamp time.Time, parentJobId string) *JobEntity {
 	return &JobEntity{
-		Id:                 uuid.New().String(),
-		ScheduledTimestamp: scheduledTimestamp,
-		ParentJobId:        parentJobId,
-		CreatedTimestamp:   time.Now(),
-		DataDiscriminator:  httpRequest,
+		Id:                uuid.New().String(),
+		ScheduleTimestamp: scheduledTimestamp,
+		ParentJobId:       parentJobId,
+		CreatedTimestamp:  time.Now(),
+		DataDiscriminator: httpRequest,
 	}
 }

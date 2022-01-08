@@ -18,8 +18,8 @@ var (
 
 func (g GormStorage) Cancel(job Job) error {
 	jobEntity := job.GetEntity()
-	jobEntity.ScheduledTimestamp = zeroTime
-	jobEntity.Status = JobStatusCancelled
+	jobEntity.ScheduleTimestamp = zeroTime
+	jobEntity.ScheduleStatus = JobStatusCancelled
 	g.db.Save(jobEntity)
 
 	return nil
@@ -28,9 +28,9 @@ func (g GormStorage) Cancel(job Job) error {
 func (g GormStorage) Fail(job Job) error {
 	jobEntity := job.GetEntity()
 	jobEntity.ExecutedTimestamp = time.Now()
-	jobEntity.ScheduledTimestamp = zeroTime
+	jobEntity.ScheduleTimestamp = zeroTime
 	jobEntity.ExecutedStatus = ExecutedStatusFail
-	jobEntity.Status = JobStatusFailed
+	jobEntity.ScheduleStatus = JobStatusFailed
 
 	result := newJobResultEntity(jobEntity)
 	result.Status = "failed"
@@ -50,7 +50,7 @@ func newJobResultEntity(jobEntity *JobEntity) JobResultEntity {
 	result := JobResultEntity{
 		Id:                 uuid.New().String(),
 		JobId:              jobEntity.Id,
-		ExecutionTimestamp: jobEntity.ScheduledTimestamp,
+		ExecutionTimestamp: jobEntity.ScheduleTimestamp,
 		DataDiscriminator:  jobEntity.DataDiscriminator,
 	}
 	return result
@@ -60,8 +60,8 @@ func (g GormStorage) Pull(count int) ([]Job, error) {
 	var jobs []JobEntity
 	err := g.db.
 		Limit(count).
-		Order("scheduled_timestamp asc").
-		Find(&jobs, "status = ?", JobStatusScheduled).Error
+		Order("schedule_timestamp asc").
+		Find(&jobs, "schedule_status = ?", JobStatusScheduled).Error
 
 	if err != nil {
 		return nil, err
@@ -121,8 +121,8 @@ func (g GormStorage) Retry(job Job) error {
 	jobEntity := job.GetEntity()
 	jobEntity.ExecutedTimestamp = time.Now()
 	jobEntity.ExecutedStatus = ExecutedStatusFail
-	jobEntity.Status = JobStatusScheduled
-	jobEntity.RetryCount++
+	jobEntity.ScheduleStatus = JobStatusScheduled
+	jobEntity.ExecutedCount++
 	result := newJobResultEntity(jobEntity)
 	result.Status = "retry"
 	result.Data = "somejson"
@@ -144,14 +144,14 @@ func (g GormStorage) RescheduleCron(job Job) error {
 	jobEntity.ExecutedStatus = ExecutedStatusSuccess
 
 	log.Info().Str("Job", job.DiagnosticsString()).Msg("Scheduling next job")
-	res, err := cronParser.Parse(jobEntity.CronExpression)
+	res, err := cronParser.Parse(jobEntity.ScheduleCronExpression)
 	if err != nil {
 		return err
 	}
 
-	next := res.Next(jobEntity.ScheduledTimestamp)
-	jobEntity.ScheduledTimestamp = next
-	jobEntity.Status = JobStatusScheduled
+	next := res.Next(jobEntity.ScheduleTimestamp)
+	jobEntity.ScheduleTimestamp = next
+	jobEntity.ScheduleStatus = JobStatusScheduled
 	result := newJobResultEntity(jobEntity)
 	result.Status = "cron"
 	result.Data = "somejson"
@@ -169,10 +169,10 @@ func (g GormStorage) RescheduleCron(job Job) error {
 func (g GormStorage) Complete(job Job) error {
 	jobEntity := job.GetEntity()
 	jobEntity.ExecutedTimestamp = time.Now()
-	jobEntity.ScheduledTimestamp = zeroTime
+	jobEntity.ScheduleTimestamp = zeroTime
 	jobEntity.ExecutedStatus = ExecutedStatusSuccess
 
-	jobEntity.Status = JobStatusSuccess
+	jobEntity.ScheduleStatus = JobStatusSuccess
 	result := newJobResultEntity(jobEntity)
 	result.Status = "completed"
 	result.Data = "somejson"
@@ -207,7 +207,7 @@ func (g GormStorage) Read(skip int, limit int) ([]JobEntity, error) {
 		//	Select("id, data_discriminator, status, scheduled_timestamp, created_timestamp, executed_timestamp, description").
 		Offset(skip).
 		Limit(limit).
-		Order("scheduled_timestamp asc").
+		Order("schedule_timestamp asc").
 		Find(&jobs).Error
 
 	if err != nil {

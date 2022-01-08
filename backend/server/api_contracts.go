@@ -10,14 +10,14 @@ type GetJobsResponse struct {
 }
 
 type JobResponse struct {
-	Id                 string          `json:"id"`
-	ScheduledTimestamp time.Time       `json:"scheduledTimestamp"`
-	Description        string          `json:"description"`
-	DataDiscriminator  string          `json:"dataDiscriminator"`
-	ParentJobId        string          `json:"parentJobId"`
-	Status             ScheduledStatus `json:"status"`
-	CronExpression     string          `json:"cronExpression"`
-	ExecutedTimestamp  time.Time       `json:"executedTimestamp"`
-	ExecutedStatus     ExecutedStatus  `json:"executedStatus"`
-	RetryCount         int             `json:"retryCount"`
+	Id                     string         `json:"id"`
+	ParentJobId            string         `json:"parentJobId"`
+	Description            string         `json:"description"`
+	ScheduleTimestamp      time.Time      `json:"scheduleTimestamp"`
+	ScheduleStatus         ScheduleStatus `json:"scheduleStatus"`
+	ScheduleCronExpression string         `json:"scheduleCronExpression"`
+	DataDiscriminator      string         `json:"dataDiscriminator"`
+	ExecutedTimestamp      time.Time      `json:"executedTimestamp"`
+	ExecutedStatus         ExecutedStatus `json:"executedStatus"`
+	ExecutedCount          int            `json:"executedCount"`
 }

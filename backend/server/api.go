@@ -63,7 +63,7 @@ func (a *apiServer) createJob(c *gin.Context) {
 		Body:           body,
 		JobEntity:      newHttpRequestJobEntity(t, ""),
 	}
-	job.CronExpression = c.GetHeader(HeaderCron)
+	job.ScheduleCronExpression = c.GetHeader(HeaderCron)
 	job.InitDefaults()
 
 	a.saveRequest(job)
@@ -102,16 +102,16 @@ func (a *apiServer) read(c *gin.Context) {
 
 	for _, job := range jobs {
 		jobResponse := JobResponse{
-			Id:                 job.Id,
-			ScheduledTimestamp: job.ScheduledTimestamp,
-			ExecutedTimestamp:  job.ExecutedTimestamp,
-			ExecutedStatus:     job.ExecutedStatus,
-			Description:        job.Description,
-			CronExpression:     job.CronExpression,
-			DataDiscriminator:  job.DataDiscriminator,
-			ParentJobId:        job.ParentJobId,
-			Status:             job.Status,
-			RetryCount:         job.RetryCount,
+			Id:                     job.Id,
+			ScheduleTimestamp:      job.ScheduleTimestamp,
+			ExecutedTimestamp:      job.ExecutedTimestamp,
+			ExecutedStatus:         job.ExecutedStatus,
+			Description:            job.Description,
+			ScheduleCronExpression: job.ScheduleCronExpression,
+			DataDiscriminator:      job.DataDiscriminator,
+			ParentJobId:            job.ParentJobId,
+			ScheduleStatus:         job.ScheduleStatus,
+			ExecutedCount:          job.ExecutedCount,
 		}
 		response.Jobs = append(response.Jobs, jobResponse)
 	}
