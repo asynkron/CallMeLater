@@ -6,6 +6,7 @@
         :rows="rows"
         row-key="name"
         title="Jobs"
+        :rows-per-page-options="[0]"
       >
         <template v-slot:body-cell-scheduledTimestamp="props">
           <q-td :props="props">

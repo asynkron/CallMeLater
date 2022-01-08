@@ -36,6 +36,11 @@ func (g GormStorage) Fail(job Job) error {
 	result.Status = "failed"
 	result.Data = "somejson"
 	jobEntity.Results = append(jobEntity.Results, result)
+
+	if jobEntity.Data == "" {
+		panic("Job data is empty - failed")
+	}
+
 	g.db.Save(jobEntity)
 
 	return nil
@@ -103,6 +108,10 @@ func (g GormStorage) Create(job Job) error {
 	jobEntity := job.GetEntity()
 	jobEntity.Data = string(j)
 
+	if jobEntity.Data == "" {
+		panic("Job data is empty - create")
+	}
+
 	g.db.Create(jobEntity)
 
 	return nil
@@ -118,6 +127,10 @@ func (g GormStorage) Retry(job Job) error {
 	result.Status = "retry"
 	result.Data = "somejson"
 	jobEntity.Results = append(jobEntity.Results, result)
+
+	if jobEntity.Data == "" {
+		panic("Job data is empty - retry")
+	}
 
 	g.db.Save(jobEntity)
 
@@ -144,6 +157,10 @@ func (g GormStorage) RescheduleCron(job Job) error {
 	result.Data = "somejson"
 	jobEntity.Results = append(jobEntity.Results, result)
 
+	if jobEntity.Data == "" {
+		panic("Job data is empty - reschedule cron")
+	}
+
 	g.db.Save(jobEntity)
 
 	return nil
@@ -160,6 +177,10 @@ func (g GormStorage) Complete(job Job) error {
 	result.Status = "completed"
 	result.Data = "somejson"
 	jobEntity.Results = append(jobEntity.Results, result)
+
+	if jobEntity.Data == "" {
+		panic("Job data is empty - complete")
+	}
 
 	g.db.Save(jobEntity)
 

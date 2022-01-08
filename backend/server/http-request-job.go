@@ -13,7 +13,7 @@ import (
 )
 
 type HttpRequestJob struct {
-	*JobEntity
+	*JobEntity     `json:"-"`
 	RequestMethod  string              `json:"request_method,omitempty"`
 	Header         map[string][]string `json:"header,omitempty"`
 	Form           map[string][]string `json:"form,omitempty"`
