@@ -7,8 +7,6 @@
         row-key="name"
         title="Jobs"
       >
-
-
         <template v-slot:body-cell-scheduledTimestamp="props">
           <q-td :props="props">
             {{ formatDate(props.row.scheduledTimestamp) }}
@@ -59,41 +57,9 @@ export default {
   name: "ListJobs",
   setup() {
     let state: State = reactive({
-      formatDate: function (value: string) {
-        if (value) {
-          const m = moment(String(value));
-          if (m.year() < 2020) {
-            return "";
-          }
-          return m.format('YYYY-MM-DD hh:mm:ss')
-        }
-      },
-      statusColor: function (value: number) {
-        switch (value) {
-          case 0:
-            return "gray";
-          case 1:
-            return "red";
-          case 2:
-            return "green";
-          default:
-            return "Unknown";
-        }
-      },
-      columns: [
-        {name: 'expander', align: 'left', label: '', field: '', sortable: false},
-        {name: 'cronExpression', align: 'left', label: 'Cron', field: 'cronExpression', sortable: false},
-        {name: 'id', align: 'left', label: 'Id', field: 'id', sortable: true},
-        {name: 'description', align: 'left', label: 'Description', field: 'description', sortable: false},
-        {
-          name: 'scheduledTimestamp',
-          align: 'left',
-          label: 'Next execution',
-          field: 'scheduledTimestamp',
-          sortable: true
-        },
-        {name: 'executedTimestamp', align: 'left', label: 'Last execution', field: 'executedTimestamp', sortable: true},
-      ],
+      formatDate: formatDate,
+      statusColor: statusColor,
+      columns: columns(),
       rows: [],
     });
 
@@ -116,6 +82,40 @@ export default {
 
     return state;
   }
+}
+
+function formatDate(value: string) {
+  if (value) {
+    const m = moment(String(value));
+    if (m.year() < 2020) {
+      return "";
+    }
+    return m.format('YYYY-MM-DD hh:mm:ss')
+  }
+}
+
+function statusColor(value: number) {
+  switch (value) {
+    case 0:
+      return "gray";
+    case 1:
+      return "red";
+    case 2:
+      return "green";
+    default:
+      return "Unknown";
+  }
+}
+
+function columns() {
+  return [
+    {name: 'expander', align: 'left', label: '', field: '', sortable: false},
+    {name: 'cronExpression', align: 'left', label: 'Cron', field: 'cronExpression', sortable: false},
+    {name: 'id', align: 'left', label: 'Id', field: 'id', sortable: true},
+    {name: 'description', align: 'left', label: 'Description', field: 'description', sortable: false},
+    {name: 'scheduledTimestamp', align: 'left', label: 'Next execution', field: 'scheduledTimestamp', sortable: true},
+    {name: 'executedTimestamp', align: 'left', label: 'Last execution', field: 'executedTimestamp', sortable: true},
+  ];
 }
 </script>
 
