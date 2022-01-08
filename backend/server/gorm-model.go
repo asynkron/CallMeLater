@@ -8,7 +8,6 @@ type JobEntity struct {
 	CreatedTimestamp       time.Time         `gorm:""`
 	Description            string            `gorm:""`
 	ScheduleTimestamp      *time.Time        `gorm:"index"`
-	ScheduleStatus         ScheduleStatus    `gorm:"index"`
 	ScheduleCronExpression string            `gorm:""`
 	ExecutedTimestamp      *time.Time        `gorm:""`
 	ExecutedStatus         ExecutedStatus    `gorm:""`

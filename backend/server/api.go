@@ -110,7 +110,6 @@ func (a *apiServer) read(c *gin.Context) {
 			ScheduleCronExpression: job.ScheduleCronExpression,
 			DataDiscriminator:      job.DataDiscriminator,
 			ParentJobId:            job.ParentJobId,
-			ScheduleStatus:         job.ScheduleStatus,
 			ExecutedCount:          job.ExecutedCount,
 		}
 		response.Jobs = append(response.Jobs, jobResponse)

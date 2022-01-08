@@ -14,7 +14,6 @@ type JobResponse struct {
 	ParentJobId            string         `json:"parentJobId"`
 	Description            string         `json:"description"`
 	ScheduleTimestamp      *time.Time     `json:"scheduleTimestamp"`
-	ScheduleStatus         ScheduleStatus `json:"scheduleStatus"`
 	ScheduleCronExpression string         `json:"scheduleCronExpression"`
 	DataDiscriminator      string         `json:"dataDiscriminator"`
 	ExecutedTimestamp      *time.Time     `json:"executedTimestamp"`

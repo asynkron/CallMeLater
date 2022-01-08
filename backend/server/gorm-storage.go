@@ -12,14 +12,9 @@ type GormStorage struct {
 	db *gorm.DB
 }
 
-var (
-	zeroTime = time.Time{}
-)
-
 func (g GormStorage) Cancel(job Job) error {
 	jobEntity := job.GetEntity()
 	jobEntity.ScheduleTimestamp = nil
-	jobEntity.ScheduleStatus = JobStatusCancelled
 	g.db.Save(jobEntity)
 
 	return nil
@@ -30,7 +25,6 @@ func (g GormStorage) Fail(job Job) error {
 	jobEntity.ExecutedTimestamp = timeToPtr(time.Now())
 	jobEntity.ScheduleTimestamp = nil
 	jobEntity.ExecutedStatus = ExecutedStatusFail
-	jobEntity.ScheduleStatus = JobStatusFailed
 
 	result := newJobResultEntity(jobEntity)
 	result.Status = "failed"
@@ -61,7 +55,7 @@ func (g GormStorage) Pull(count int) ([]Job, error) {
 	err := g.db.
 		Limit(count).
 		Order("schedule_timestamp asc").
-		Find(&jobs, "schedule_status = ?", JobStatusScheduled).Error
+		Find(&jobs, "schedule_timestamp is not null").Error
 
 	if err != nil {
 		return nil, err
@@ -121,7 +115,6 @@ func (g GormStorage) Retry(job Job) error {
 	jobEntity := job.GetEntity()
 	jobEntity.ExecutedTimestamp = timeToPtr(time.Now())
 	jobEntity.ExecutedStatus = ExecutedStatusFail
-	jobEntity.ScheduleStatus = JobStatusScheduled
 	jobEntity.ExecutedCount++
 	result := newJobResultEntity(jobEntity)
 	result.Status = "retry"
@@ -151,7 +144,6 @@ func (g GormStorage) RescheduleCron(job Job) error {
 
 	next := res.Next(*jobEntity.ScheduleTimestamp)
 	jobEntity.ScheduleTimestamp = &next
-	jobEntity.ScheduleStatus = JobStatusScheduled
 	result := newJobResultEntity(jobEntity)
 	result.Status = "cron"
 	result.Data = "somejson"
@@ -171,8 +163,6 @@ func (g GormStorage) Complete(job Job) error {
 	jobEntity.ExecutedTimestamp = timeToPtr(time.Now())
 	jobEntity.ScheduleTimestamp = nil
 	jobEntity.ExecutedStatus = ExecutedStatusSuccess
-
-	jobEntity.ScheduleStatus = JobStatusSuccess
 	result := newJobResultEntity(jobEntity)
 	result.Status = "completed"
 	result.Data = "somejson"
