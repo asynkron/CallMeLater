@@ -111,6 +111,7 @@ func (a *apiServer) read(c *gin.Context) {
 			DataDiscriminator:  job.DataDiscriminator,
 			ParentJobId:        job.ParentJobId,
 			Status:             job.Status,
+			RetryCount:         job.RetryCount,
 		}
 		response.Jobs = append(response.Jobs, jobResponse)
 	}

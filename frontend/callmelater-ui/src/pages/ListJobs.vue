@@ -116,6 +116,7 @@ function columns() {
     {name: 'description', align: 'left', label: 'Description', field: 'description', sortable: false},
     {name: 'scheduledTimestamp', align: 'left', label: 'Next execution', field: 'scheduledTimestamp', sortable: true},
     {name: 'executedTimestamp', align: 'left', label: 'Last execution', field: 'executedTimestamp', sortable: true},
+    {name: 'retryCount', align: 'right', label: 'Retries', field: 'retryCount', sortable: true},
   ];
 }
 </script>

@@ -19,4 +19,5 @@ type JobResponse struct {
 	CronExpression     string          `json:"cronExpression"`
 	ExecutedTimestamp  time.Time       `json:"executedTimestamp"`
 	ExecutedStatus     ExecutedStatus  `json:"executedStatus"`
+	RetryCount         int             `json:"retryCount"`
 }
