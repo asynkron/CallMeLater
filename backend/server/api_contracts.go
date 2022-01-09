@@ -15,7 +15,7 @@ type JobResponse struct {
 	Description            string         `json:"description"`
 	ScheduleTimestamp      *time.Time     `json:"scheduleTimestamp"`
 	ScheduleCronExpression string         `json:"scheduleCronExpression"`
-	DataDiscriminator      string         `json:"dataDiscriminator"`
+	JobType                string         `json:"jobType"`
 	ExecutedTimestamp      *time.Time     `json:"executedTimestamp"`
 	ExecutedStatus         ExecutedStatus `json:"executedStatus"`
 	ExecutedCount          int            `json:"executedCount"`

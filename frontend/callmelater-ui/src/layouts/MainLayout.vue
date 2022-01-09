@@ -1,52 +1,41 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
+  <q-layout class="shadow-2 rounded-borders" view="hHh Lpr lff">
+    <q-header>
       <q-toolbar>
-        <q-btn
-          aria-label="Menu"
-          dense
-          flat
-          icon="menu"
-          round
-          @click="toggleLeftDrawer"
-        />
-
         <q-toolbar-title>
           Call Me Later
         </q-toolbar-title>
-
         <div>blabla</div>
       </q-toolbar>
     </q-header>
-
-    <q-drawer
-      v-model="leftDrawerOpen"
-      bordered
-      show-if-above
-    >
-      <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
-        </q-item-label>
-
-        <EssentialLink
-          v-for="link in essentialLinks"
-          :key="link.title"
-          v-bind="link"
-        />
-      </q-list>
-    </q-drawer>
-
     <q-page-container>
+
+      <q-tabs
+        class="bg-grey-3"
+        indicator-color="primary"
+
+        inline-label>
+        <q-route-tab
+          exact
+          icon="mail"
+          label="Jobs"
+          to="/jobs"
+        />
+        <q-route-tab
+          exact
+          icon="alarm"
+          label="Start"
+          to="/"
+        />
+      </q-tabs>
+
       <router-view/>
     </q-page-container>
   </q-layout>
 </template>
 
 <script>
-import EssentialLink from 'components/EssentialLink.vue'
+
 import {defineComponent, ref} from 'vue'
 
 const linksList = [
@@ -97,9 +86,6 @@ const linksList = [
 export default defineComponent({
   name: 'MainLayout',
 
-  components: {
-    EssentialLink
-  },
 
   setup() {
     const leftDrawerOpen = ref(false)

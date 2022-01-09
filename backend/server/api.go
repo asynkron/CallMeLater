@@ -108,7 +108,7 @@ func (a *apiServer) read(c *gin.Context) {
 			ExecutedStatus:         job.ExecutedStatus,
 			Description:            job.Description,
 			ScheduleCronExpression: job.ScheduleCronExpression,
-			DataDiscriminator:      job.DataDiscriminator,
+			JobType:                job.DataDiscriminator,
 			ParentJobId:            job.ParentJobId,
 			ExecutedCount:          job.ExecutedCount,
 		}

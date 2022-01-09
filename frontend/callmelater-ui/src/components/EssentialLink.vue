@@ -2,6 +2,7 @@
   <q-item
     :href="link"
     clickable
+    v-ripple
     tag="a"
     target="_blank"
   >

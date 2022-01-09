@@ -1,10 +1,19 @@
 <template>
   <q-page class="flex ">
     <div class="q-pa-md full-width">
+      <div class="q-pb-md q-gutter-md">
+
+        <q-btn color="primary" icon="play_circle_outline">Trigger now</q-btn>
+        <q-btn icon="clear">Remove</q-btn>
+
+      </div>
       <q-table
+        v-model:selected="selected"
+        color="primary"
+        row-key="id"
         :columns="columns"
         :rows="rows"
-        row-key="name"
+        selection="multiple"
         title="Jobs"
         :rows-per-page-options="[0]"
       >
@@ -13,6 +22,12 @@
             <div class="row justify-center">
               <div style="width:80px;text-overflow: ellipsis;overflow:hidden">{{ props.row.id }}</div>
             </div>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-jobType="props">
+          <q-td :props="props">
+            <div>HTTP</div>
           </q-td>
         </template>
 
@@ -59,6 +74,7 @@ interface State {
   statusIcon: Function;
   columns: any[];
   rows: Job[];
+  selected: string[];
 }
 
 export default {
@@ -70,6 +86,7 @@ export default {
       statusIcon: statusIcon,
       columns: columns(),
       rows: [],
+      selected: [],
     });
 
     async function getJobs(skip: number, limit: number) {
@@ -142,6 +159,7 @@ function statusIcon(value: number) {
 
 function columns() {
   return [
+    {name: 'jobType', align: 'left', label: 'Job Type', field: 'jobType', sortable: true},
     {name: 'id', align: 'left', label: 'Id', field: 'id', sortable: true},
     {name: 'scheduleCronExpression', align: 'left', label: 'Cron', field: 'scheduleCronExpression', sortable: false},
     {name: 'description', align: 'left', label: 'Description', field: 'description', sortable: false},
