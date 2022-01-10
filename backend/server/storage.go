@@ -10,5 +10,5 @@ type JobStorage interface {
 	Fail(job Job) error
 	//GetResults(requestId string) ([]*JobResultEntity, error)
 
-	Read(skip int, limit int) ([]JobEntity, error)
+	Read(skip int, limit int, search string) ([]JobEntity, error)
 }

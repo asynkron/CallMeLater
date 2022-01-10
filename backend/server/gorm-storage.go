@@ -190,13 +190,14 @@ func NewStorage(dialector gorm.Dialector) *GormStorage {
 	return q
 }
 
-func (g GormStorage) Read(skip int, limit int) ([]JobEntity, error) {
+func (g GormStorage) Read(skip int, limit int, search string) ([]JobEntity, error) {
 	var jobs []JobEntity
 
 	err := g.db.
 		//	Select("id, data_discriminator, status, scheduled_timestamp, created_timestamp, executed_timestamp, description").
 		Offset(skip).
 		Limit(limit).
+		Where("description like ?", "%"+search+"%").
 		Order("schedule_timestamp asc").
 		Find(&jobs).Error
 

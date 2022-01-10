@@ -12,21 +12,16 @@
 
       <q-tabs
         class="bg-grey-3"
+        align="left"
         indicator-color="primary"
-
         inline-label>
         <q-route-tab
           exact
-          icon="mail"
+          icon="alarm"
           label="Jobs"
           to="/jobs"
         />
-        <q-route-tab
-          exact
-          icon="alarm"
-          label="Start"
-          to="/"
-        />
+
       </q-tabs>
 
       <router-view/>

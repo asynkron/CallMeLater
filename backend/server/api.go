@@ -86,9 +86,10 @@ func (a *apiServer) saveRequest(rd *HttpRequestJob) {
 
 func (a *apiServer) read(c *gin.Context) {
 
-	skip, _ := strconv.Atoi(c.Query("limit"))
-	limit, _ := strconv.Atoi(c.Param("limit"))
-	jobs, err := a.worker.storage.Read(skip, limit)
+	search := c.Query("search")
+	skip, _ := strconv.Atoi(c.Query("skip"))
+	limit, _ := strconv.Atoi(c.Query("limit"))
+	jobs, err := a.worker.storage.Read(skip, limit, search)
 	if err != nil {
 		log.Err(err).Msg("Error reading requests")
 		c.String(http.StatusInternalServerError, "Error reading jobs")
@@ -147,6 +148,6 @@ func handleRequests(worker *worker) {
 	r.Use(CORSMiddleware())
 
 	r.Any("/later", a.createJob)
-	r.GET("/jobs/:skip/:limit", a.read)
+	r.GET("/jobs", a.read)
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

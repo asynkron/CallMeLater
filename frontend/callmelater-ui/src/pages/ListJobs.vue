@@ -1,12 +1,19 @@
 <template>
   <q-page class="flex ">
     <div class="q-pa-md full-width">
-      <div class="q-pb-md q-gutter-md">
+
+      <q-toolbar class="q-mb-sm">
 
         <q-btn color="primary" icon="play_circle_outline">Trigger now</q-btn>
-        <q-btn icon="clear">Remove</q-btn>
+        <q-btn class="q-ml-md" icon="clear">Remove</q-btn>
 
-      </div>
+        <q-input v-model="search" class="bg-white col q-ml-md" dense label="Search" outlined standout>
+          <template v-slot:after>
+            <q-btn color="primary" icon="search" label="Search" outline square v-on:click="fetch"></q-btn>
+          </template>
+        </q-input>
+
+      </q-toolbar>
       <q-table
         v-model:selected="selected"
         color="primary"
@@ -15,7 +22,7 @@
         :rows="rows"
         selection="multiple"
         title="Jobs"
-        :rows-per-page-options="[0]"
+
       >
         <template v-slot:body-cell-id="props">
           <q-td key="link" :props="props">
@@ -47,7 +54,6 @@
             </q-chip>
           </q-td>
         </template>
-
       </q-table>
     </div>
   </q-page>
@@ -72,9 +78,13 @@ interface State {
   formatDate: Function;
   statusColor: Function;
   statusIcon: Function;
+  fetch: Function;
   columns: any[];
   rows: Job[];
   selected: string[];
+  search: string;
+  skip: number;
+  limit: number;
 }
 
 export default {
@@ -87,10 +97,14 @@ export default {
       columns: columns(),
       rows: [],
       selected: [],
+      search: "",
+      skip: 0,
+      limit: 20,
+      fetch: () => getJobs(state.skip, state.limit, state.search)
     });
 
-    async function getJobs(skip: number, limit: number) {
-      const response = await fetch(`http://localhost:8080/jobs/${skip}/${limit}`, {
+    async function getJobs(skip: number, limit: number, search: string) {
+      const response = await fetch(`http://localhost:8080/jobs?skip=${skip}&limit=${limit}&search=${search}`, {
         method: 'get',
         headers: {
           'content-type': 'application/json'
@@ -104,7 +118,7 @@ export default {
       state.rows = json.jobs
     }
 
-    onMounted(async () => await getJobs(0, 20));
+    onMounted(async () => await state.fetch());
 
     return state;
   }
@@ -163,7 +177,14 @@ function columns() {
     {name: 'id', align: 'left', label: 'Id', field: 'id', sortable: true},
     {name: 'scheduleCronExpression', align: 'left', label: 'Cron', field: 'scheduleCronExpression', sortable: false},
     {name: 'description', align: 'left', label: 'Description', field: 'description', sortable: false},
-    {name: 'scheduleTimestamp', align: 'left', label: 'Next execution', field: 'scheduleTimestamp', sortable: true},
+    {
+      name: 'scheduleTimestamp',
+      align: 'left',
+      label: 'Next execution',
+      field: 'scheduleTimestamp',
+      sortable: true,
+      sort: 'asc'
+    },
     {name: 'executedTimestamp', align: 'left', label: 'Last execution', field: 'executedTimestamp', sortable: true},
     {name: 'executedCount', align: 'right', label: 'Retries', field: 'executedCount', sortable: true},
   ];
