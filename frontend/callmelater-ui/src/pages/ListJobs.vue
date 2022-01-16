@@ -4,10 +4,11 @@
 
       <q-toolbar class="q-mb-sm">
 
-        <q-btn color="primary" icon="play_circle_outline">Trigger now</q-btn>
-        <q-btn class="q-ml-md" icon="clear">Remove</q-btn>
+        <q-btn color="primary" icon="play_circle_outline" outline>Trigger now</q-btn>
+        <q-btn class="q-ml-md" color="negative" icon="clear" outline>Remove</q-btn>
 
-        <q-input v-model="search" class="bg-white col q-ml-md" dense placeholder="Search" standout="bg-primary">
+        <q-input v-model="search" class="bg-white col q-ml-md" dense placeholder="Search" standout="bg-primary"
+                 @keyup.enter="fetch">
           <template v-slot:prepend>
             <q-icon v-if="search === ''" name="search"/>
             <q-icon v-else class="cursor-pointer" name="clear" @click="search = ''"/>
