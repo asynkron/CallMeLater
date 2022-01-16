@@ -4,8 +4,8 @@
 
       <q-toolbar class="q-mb-sm">
 
-        <q-btn color="primary" icon="play_circle_outline" outline>Trigger now</q-btn>
-        <q-btn class="q-ml-md" color="negative" icon="clear" outline>Remove</q-btn>
+        <q-btn :disable="selected.length==0" color="primary" icon="play_circle_outline" outline>Trigger now</q-btn>
+        <q-btn :disable="selected.length==0" class="q-ml-md" color="negative" icon="clear" outline>Remove</q-btn>
 
         <q-input v-model="search" class="bg-white col q-ml-md" dense placeholder="Search" standout="bg-primary"
                  @keyup.enter="fetch">
@@ -19,6 +19,11 @@
         </q-input>
 
       </q-toolbar>
+
+      <!--      <div class="q-mt-md">-->
+      <!--        Selected: {{ JSON.stringify(selected) }}-->
+      <!--      </div>-->
+
       <q-table
         v-model:selected="selected"
         color="primary"
