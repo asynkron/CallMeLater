@@ -7,7 +7,11 @@
         <q-btn color="primary" icon="play_circle_outline">Trigger now</q-btn>
         <q-btn class="q-ml-md" icon="clear">Remove</q-btn>
 
-        <q-input v-model="search" class="bg-white col q-ml-md" dense label="Search" outlined standout>
+        <q-input v-model="search" class="bg-white col q-ml-md" dense placeholder="Search" standout="bg-primary">
+          <template v-slot:prepend>
+            <q-icon v-if="search === ''" name="search"/>
+            <q-icon v-else class="cursor-pointer" name="clear" @click="search = ''"/>
+          </template>
           <template v-slot:after>
             <q-btn color="primary" icon="search" label="Search" outline square v-on:click="fetch"></q-btn>
           </template>
